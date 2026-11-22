@@ -27,7 +27,15 @@ function makeRef() {
   return 'MM-' + Array.from(bytes, (b) => chars[b % chars.length]).join('');
 }
 
+function mailHint(msg) {
+  const m = String(msg || '').toLowerCase();
+  if (m.includes('mailer') && m.includes('undefined')) return 'The send_email binding (MAILER) is missing. Redeploy the site so wrangler.jsonc is applied.';
+  if (m.includes('verified') || m.includes('destination')) return 'Cloudflare does not trust the destination yet. In Cloudflare > mtlmaison.ca > Email > Email Routing > Destination addresses, add ' + TO + ' and click the verification link Cloudflare emails to it.';
+  if (m.includes('routing') || m.includes('not enabled') || m.includes('sender') || m.includes('domain')) return 'Email Routing is probably not enabled for mtlmaison.ca. In Cloudflare > mtlmaison.ca > Email > Email Routing, click Enable and accept the DNS records.';
+  return 'Open Cloudflare > Workers > mtlmaison-site > Logs to see the full error, then send it to Claude.';
+}
 async function sendMail(env, { subject, body, replyTo }) {
+  if (!env.MAILER || typeof env.MAILER.send !== 'function') throw new Error('MAILER binding is undefined');
   const headers = [
     `From: MtlMaison Website <${FROM}>`,
     `To: ${TO}`,
@@ -49,7 +57,13 @@ async function handleRequest(env, data) {
   const method = data.method === 'delivery' ? 'delivery' : data.method === 'pickup' ? 'pickup' : '';
   const place = oneLine(data.place, 120), note = clean(data.note, 1000);
   const items = Array.isArray(data.items) ? data.items.slice(0, 40).map((i) => ({ id: oneLine(i && i.id, 20), label: oneLine(i && i.label, 160) })).filter((i) => i.id) : [];
-  if (!name || !isEmail(email) || !method || !items.length || (method === 'delivery' && !place)) return json({ ok: false, error: 'invalid' }, 400);
+  const fields = [];
+  if (!items.length) fields.push('cart');
+  if (!method) fields.push('method');
+  if (method === 'delivery' && !place) fields.push('place');
+  if (!name) fields.push('name');
+  if (!isEmail(email)) fields.push('email');
+  if (fields.length) return json({ ok: false, error: 'invalid', fields }, 400);
   const ref = makeRef();
   const body = [
     `NEW REQUEST ${ref}`, '',
@@ -87,8 +101,8 @@ export default {
     const url = new URL(request.url);
     if (!url.pathname.startsWith('/api/')) return env.ASSETS.fetch(request);
     if (url.pathname === '/api/selftest' && request.method === 'GET') { // temporary: lets the owner check email delivery
-      try { await sendMail(env, { subject: 'MtlMaison test email', body: 'If you read this, the website can email you.' }); return json({ ok: true, sent: true }); }
-      catch (e) { console.error('selftest failed', String(e && e.message || e)); return json({ ok: false, error: String(e && e.message || e) }, 502); }
+      try { await sendMail(env, { subject: 'MtlMaison test email', body: 'If you read this, the website can email you.' }); return json({ ok: true, sent: true, note: 'Sent to ' + TO + '. Check Inbox, Spam and All Mail.' }); }
+      catch (e) { const msg = String(e && e.message || e); console.error('selftest failed', msg); return json({ ok: false, error: msg, hint: mailHint(msg) }, 502); }
     }
     if (request.method !== 'POST') return json({ ok: false, error: 'method' }, 405);
     const origin = request.headers.get('Origin');
@@ -101,7 +115,7 @@ export default {
       if (url.pathname === '/api/reply') return await handleReply(env, data);
       return json({ ok: false, error: 'notfound' }, 404);
     } catch (e) {
-      console.error('send failed', String(e && e.message || e));
+      console.error('send failed', String(e && e.message || e), 'REQUEST_NOT_DELIVERED', JSON.stringify(data).slice(0, 3000));
       return json({ ok: false, error: 'send', detail: String(e && e.message || e).slice(0, 200) }, 502);
     }
   },

@@ -456,3 +456,14 @@ main.enter{animation:pageIn .5s ease backwards}
 @media (max-width:900px){.cart-grid{grid-template-columns:minmax(0,1fr)}}
 @media (max-width:560px){.mopts{grid-template-columns:minmax(0,1fr)}.stp{font-size:11px;letter-spacing:.02em}.stepper .track{top:30px}.how-ico{width:80px;height:80px}}
 .cart-form .field,.how-body .field,.book .field,form>.field{flex:0 0 auto}
+
+/* error summary and error pages */
+.errsum{border-color:#8a2f22;background:#fbefeb}
+.errsum:focus{outline:2px solid #8a2f22;outline-offset:2px}
+.errsum ul{margin:8px 0 6px;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+.errsum a{color:inherit;text-decoration:underline;text-underline-offset:3px}
+.errpage{gap:18px;align-items:flex-start;padding-top:56px;padding-bottom:72px}
+.errpage .eyebrow{display:none}
+.field{min-width:0}
+.field input,.field textarea{min-width:0;max-width:100%;box-sizing:border-box}
+.field .alert{box-sizing:border-box;max-width:100%;white-space:normal;font-size:13px}

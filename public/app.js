@@ -207,6 +207,57 @@ var T2 = {
 };
 ['en', 'fr'].forEach(function (l) { for (var k in T2[l]) T[l][k] = T2[l][k]; });
 
+/* ---------- clearer error messages (override earlier strings) ---------- */
+var T3 = {
+  en: {
+    errName: 'Please type your name so we know who to reply to.',
+    errEmail: 'Please type a valid email, like name@example.com. This is where we send your price.',
+    errDate: 'Please choose the date you would like to visit.', errTime: 'Please choose a time for your visit.',
+    errMethod: 'Please choose pickup or delivery.', errPlace: 'You chose delivery. Please type the city and country we should deliver to.',
+    errCart: 'Your cart is empty. Add at least one piece, then send your request.',
+    errReplyChoice: 'Please choose “I’m in” or “I’d like changes”.',
+    errRef: 'Please type your reference. It is in our email and looks like MM-XXXXX.',
+    errMsg: 'Please tell us what you would like to change.',
+    errSumOne: 'One thing to fix before we can send this:', errSumMany: function (n) { return n + ' things to fix before we can send this:'; },
+    errSumHelp: 'Tap a line to jump to it.',
+    failTitle: 'We could not send your request',
+    failOffline: 'Your device seems to be offline. Check your connection and press Send again. Your cart is saved.',
+    failInvalid: 'Something is missing or not valid. Please check the fields marked above and press Send again.',
+    failServer: 'Our email system did not accept your request. Nothing is lost and your cart is saved. Press Send again in a minute, or use the button below to send it from your own email app.',
+    failBlocked: 'This page could not reach us. Please reload the page and try again, or send it by email instead.',
+    replyFailOffline: 'Your device seems to be offline. Check your connection and press Send again.',
+    replyFailInvalid: 'Something is missing or not valid. Please check your reference and try again.',
+    replyFailServer: 'Our email system did not accept this. Please try again in a minute or email us directly.',
+    e404T: 'Page not found', e404P: 'This page does not exist or has moved. The link may be old or mistyped. You can go back to the start or browse the collection.',
+    errorT: 'Something went wrong', errorP: 'This page could not load. Your cart and favourites are safe. Please reload the page. If it keeps happening, message us on Instagram or by email.',
+    reload: 'Reload the page', collection: 'Browse the collection', itemGone: 'This piece is no longer here. It may have been sold.'
+  },
+  fr: {
+    errName: 'Veuillez écrire votre nom pour que nous sachions à qui répondre.',
+    errEmail: 'Veuillez écrire un courriel valide, comme nom@exemple.com. C’est là que nous envoyons votre prix.',
+    errDate: 'Veuillez choisir la date de votre visite.', errTime: 'Veuillez choisir l’heure de votre visite.',
+    errMethod: 'Veuillez choisir le ramassage ou la livraison.', errPlace: 'Vous avez choisi la livraison. Veuillez écrire la ville et le pays de livraison.',
+    errCart: 'Votre panier est vide. Ajoutez au moins une pièce, puis envoyez votre demande.',
+    errReplyChoice: 'Veuillez choisir « Je suis partant » ou « Je voudrais des changements ».',
+    errRef: 'Veuillez écrire votre référence. Elle est dans notre courriel et ressemble à MM-XXXXX.',
+    errMsg: 'Veuillez nous dire ce que vous aimeriez modifier.',
+    errSumOne: 'Une chose à corriger avant l’envoi :', errSumMany: function (n) { return n + ' choses à corriger avant l’envoi :'; },
+    errSumHelp: 'Touchez une ligne pour y aller.',
+    failTitle: 'Nous n’avons pas pu envoyer votre demande',
+    failOffline: 'Votre appareil semble hors ligne. Vérifiez votre connexion et appuyez de nouveau sur Envoyer. Votre panier est conservé.',
+    failInvalid: 'Il manque quelque chose ou une information n’est pas valide. Vérifiez les champs indiqués ci-dessus et réessayez.',
+    failServer: 'Notre système de courriel n’a pas accepté votre demande. Rien n’est perdu et votre panier est conservé. Réessayez dans une minute, ou utilisez le bouton ci-dessous pour l’envoyer depuis votre application de courriel.',
+    failBlocked: 'Cette page n’a pas pu nous joindre. Rechargez la page et réessayez, ou envoyez plutôt un courriel.',
+    replyFailOffline: 'Votre appareil semble hors ligne. Vérifiez votre connexion et réessayez.',
+    replyFailInvalid: 'Il manque quelque chose ou une information n’est pas valide. Vérifiez votre référence et réessayez.',
+    replyFailServer: 'Notre système de courriel n’a pas accepté ceci. Réessayez dans une minute ou écrivez-nous directement.',
+    e404T: 'Page introuvable', e404P: 'Cette page n’existe pas ou a été déplacée. Le lien est peut-être ancien ou mal écrit. Retournez à l’accueil ou parcourez la collection.',
+    errorT: 'Un problème est survenu', errorP: 'Cette page n’a pas pu se charger. Votre panier et vos favoris sont en sécurité. Rechargez la page. Si cela continue, écrivez-nous sur Instagram ou par courriel.',
+    reload: 'Recharger la page', collection: 'Voir la collection', itemGone: 'Cette pièce n’est plus ici. Elle a peut-être été vendue.'
+  }
+};
+['en', 'fr'].forEach(function (l) { for (var k in T3[l]) T[l][k] = T3[l][k]; });
+
 /* ---------- state ---------- */
 function store(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } }
 var lang = store('mm_lang') || ((navigator.language || '').toLowerCase().indexOf('fr') === 0 ? 'fr' : 'en');
@@ -371,7 +422,7 @@ function pageCat(r) {
 }
 
 function pageItem(r) {
-  var it = byId(r.id); if (!it) return page404();
+  var it = byId(r.id); if (!it) return pageError(t('e404T'), t('itemGone'));
   var on = isFav(it.id), inC = isInCart(it.id);
   var photos = it.photos || [];
   var thumbs = photos.length > 1 ? '<div class="thumbs">' + photos.slice(0, 4).map(function (p, i) { return '<button data-act="photo" data-i="' + i + '" aria-pressed="' + (i === (S.photo || 0)) + '" aria-label="Photo ' + (i + 1) + '"><img src="assets/items/' + esc(p) + '" alt=""></button>'; }).join('') + '</div>' : '';
@@ -433,7 +484,7 @@ function pageBook() {
   var times = (c.bookingTimes || []).map(function (tm) { return '<button type="button" class="chip' + (f.time === tm ? ' on' : '') + '" data-act="time" data-t="' + tm + '" aria-pressed="' + (f.time === tm) + '">' + tm + '</button>'; }).join('');
   function fld(id, label, type, extra) { return '<label class="field">' + label + '<input id="f-' + id + '" name="' + id + '" type="' + type + '" value="' + esc(f[id]) + '" ' + (extra || '') + (er[id] ? ' aria-invalid="true" aria-describedby="e-' + id + '"' : '') + '>' + (er[id] ? '<span class="alert" id="e-' + id + '" role="alert" style="text-transform:none;letter-spacing:0">' + er[id] + '</span>' : '') + '</label>'; }
   return '<main id="main" tabindex="-1" class="wrap page book">' + head +
-    '<form data-act="book" novalidate style="display:flex;flex-direction:column;gap:20px"><div class="fields">' + fld('name', t('fName'), 'text', 'autocomplete="name"') + fld('email', t('fEmail'), 'email', 'autocomplete="email" inputmode="email"') + '</div>' +
+    '<form data-act="book" novalidate style="display:flex;flex-direction:column;gap:20px">' + errSummary(er, ['name', 'email', 'date', 'time']) + '<div class="fields">' + fld('name', t('fName'), 'text', 'autocomplete="name"') + fld('email', t('fEmail'), 'email', 'autocomplete="email" inputmode="email"') + '</div>' +
     '<div class="fields">' + fld('phone', t('fPhone'), 'tel', 'autocomplete="tel"') + fld('date', t('fDate'), 'date', 'min="' + minS + '"') + '</div>' +
     '<fieldset><legend>' + t('fTime') + '</legend><div class="chips">' + times + '</div>' + (er.time ? '<p class="alert" role="alert">' + er.time + '</p>' : '') + '</fieldset>' +
     '<label class="field">' + t('fNote') + '<input id="f-note" name="note" type="text" value="' + esc(f.note) + '"></label>' +
@@ -478,13 +529,13 @@ function pageCart() {
   return '<main id="main" tabindex="-1" class="wrap page">' + head + '<div class="cat-head"><div class="cat-title"><span class="cat-ico fx" style="color:var(--caramel)">' + ico('bag', 44, 1.2) + '</span><div><h1>' + t('cartT') + '</h1><p class="count">' + plural(items.length) + '</p></div></div></div>' +
     '<p class="hint">' + ico('new', 20, 1.4) + '<span>' + t('cartHint') + '</span></p>' +
     '<div class="cart-grid"><div class="cart-list">' + items.map(cartRow).join('') + '<a class="btn-link" href="#/c/all" style="margin-top:12px">' + t('browse') + '</a></div>' +
-    '<form class="cart-form" data-act="cart-send" novalidate>' + methods + place +
+    '<form class="cart-form" data-act="cart-send" novalidate>' + errSummary(er, ['method', 'place', 'name', 'email']) + methods + place +
     '<h2 class="serif" style="margin:6px 0 0;font-size:26px;font-weight:400">' + t('yourDetails') + '</h2>' +
     '<div class="fields">' + cartFieldHtml('name', t('fName'), 'text', 'autocomplete="name"') + cartFieldHtml('email', t('fEmail'), 'email', 'autocomplete="email" inputmode="email"') + '</div>' +
     cartFieldHtml('phone', t('fPhone'), 'tel', 'autocomplete="tel"') + cartFieldHtml('note', t('fNote'), 'text') +
     '<input class="hp" id="c-website" type="text" tabindex="-1" autocomplete="off" aria-hidden="true">' +
     '<p class="note">' + ico('check', 18, 1.5) + '<span>' + t('cartNote') + '</span></p>' +
-    (S.fail ? '<div class="alert" role="alert"><strong>' + t('failT') + '</strong> ' + t('failP') + ' <button type="button" class="btn-link" data-act="cart-mail" style="min-height:36px">' + t('sendByMail') + '</button></div>' : '') +
+    (S.fail ? '<div class="alert" role="alert" id="errsum" tabindex="-1"><strong>' + t('failTitle') + '</strong><p style="margin:6px 0 8px">' + failText(S.failCode, 'cart') + '</p><button type="button" class="btn-link" data-act="cart-mail" style="min-height:36px">' + t('sendByMail') + '</button></div>' : '') +
     '<button class="btn" type="submit"' + (S.sending ? ' disabled' : '') + '>' + ico('mail', 20, 1.5) + (S.sending ? t('sending') : t('sendReq')) + '</button>' +
     '<p class="note" style="font-size:13px">' + t('privNote') + ' <a href="#/privacy">' + t('privLink') + '</a></p></form></div></main>';
 }
@@ -526,16 +577,35 @@ function pageReply(r) {
   var ch = [['in', 'check', 'imIn', 'imInP'], ['change', 'message', 'wantChanges', 'wantChangesP']].map(function (c) { var on = R.choice === c[0]; return '<button type="button" class="mopt' + (on ? ' on' : '') + '" role="radio" aria-checked="' + on + '" data-act="reply-choice" data-c="' + c[0] + '"><span class="fx">' + ico(c[1], 30, 1.4) + '</span><strong>' + t(c[2]) + '</strong><span>' + t(c[3]) + '</span></button>'; }).join('');
   function fl(id, label, type, extra) { return '<label class="field">' + label + '<input id="r-' + id + '" type="' + type + '" value="' + esc(R[id]) + '" ' + (extra || '') + (er[id] ? ' aria-invalid="true"' : '') + '>' + (er[id] ? '<span class="alert" role="alert" style="text-transform:none;letter-spacing:0">' + er[id] + '</span>' : '') + '</label>'; }
   return '<main id="main" tabindex="-1" class="wrap page book">' + head + '<p class="muted" style="margin:0">' + t('replyAsk') + '</p>' +
-    '<form data-act="reply-send" novalidate style="display:flex;flex-direction:column;gap:18px"><div class="mopts" role="radiogroup">' + ch + '</div>' + (er.choice ? '<p class="alert" role="alert">' + er.choice + '</p>' : '') +
+    '<form data-act="reply-send" novalidate style="display:flex;flex-direction:column;gap:18px">' + errSummary(er, ['choice', 'ref', 'msg', 'email']) + '<div class="mopts" role="radiogroup" id="r-choice">' + ch + '</div>' +
     fl('ref', t('fRef'), 'text', 'autocomplete="off" autocapitalize="characters"') +
     (R.choice === 'change' ? '<label class="field">' + t('fChange') + '<textarea id="r-msg" rows="4"' + (er.msg ? ' aria-invalid="true"' : '') + '>' + esc(R.msg) + '</textarea>' + (er.msg ? '<span class="alert" role="alert" style="text-transform:none;letter-spacing:0">' + er.msg + '</span>' : '') + '</label>' : '') +
     fl('email', t('fOptEmail'), 'email', 'autocomplete="email" inputmode="email"') +
     '<input class="hp" id="r-website" type="text" tabindex="-1" autocomplete="off" aria-hidden="true">' +
-    (R.fail ? '<p class="alert" role="alert">' + t('replyFail') + '</p>' : '') +
-    '<button class="btn" type="submit"' + (R.sending || !R.choice ? ' disabled' : '') + '>' + (R.sending ? t('sending') : R.choice === 'change' ? t('sendChanges') : t('confirmIn')) + '</button></form></main>';
+    (R.fail ? '<div class="alert" role="alert" id="errsum" tabindex="-1"><strong>' + t('failTitle') + '</strong><p style="margin:6px 0 0">' + failText(R.failCode, 'reply') + '</p></div>' : '') +
+    '<button class="btn" type="submit"' + (R.sending ? ' disabled' : '') + '>' + (R.sending ? t('sending') : R.choice === 'change' ? t('sendChanges') : t('confirmIn')) + '</button></form></main>';
 }
 
-function page404() { return '<main id="main" tabindex="-1" class="wrap page"><h1>404</h1><p>' + t('notFound') + '</p><a class="btn" href="#/" style="align-self:flex-start">' + t('backHome') + '</a></main>'; }
+
+function errSummary(errs, order) {
+  var keys = order.filter(function (k) { return errs[k]; });
+  if (!keys.length) return '';
+  var title = keys.length === 1 ? t('errSumOne') : t('errSumMany')(keys.length);
+  return '<div class="alert errsum" id="errsum" role="alert" tabindex="-1"><strong>' + title + '</strong><ul>' +
+    keys.map(function (k) { return '<li><a href="#" data-act="goto" data-f="' + esc(k.f || k) + '">' + errs[k] + '</a></li>'; }).join('') + '</ul></div>';
+}
+function failText(code, kind) {
+  var pre = kind === 'reply' ? 'replyFail' : 'fail';
+  if (code === 'offline') return t(pre + 'Offline');
+  if (code === 'invalid') return t(pre + 'Invalid');
+  if (kind !== 'reply' && (code === 'origin' || code === 'notfound' || code === 'method' || code === 'json')) return t('failBlocked');
+  return t(pre + 'Server');
+}
+function pageError(title, text) {
+  return '<main id="main" tabindex="-1" class="wrap page errpage"><p class="eyebrow">' + title + '</p><h1>' + title + '</h1><p class="muted" style="max-width:56ch">' + text + '</p>' +
+    '<div class="hero-btns"><a class="btn" href="#/">' + t('backHome') + '</a><a class="btn-o" href="#/c/all">' + t('collection') + '</a></div></main>';
+}
+function page404() { return pageError(t('e404T'), t('e404P')); }
 
 /* ---------- contact sheet ---------- */
 function sheetMessage() {
@@ -594,7 +664,13 @@ function onScroll() {
   var h = document.querySelector('header.site'); if (h) h.classList.toggle('scrolled', window.scrollY > 10);
   var f = document.querySelector('.fab'); if (f) f.classList.toggle('show', window.scrollY > 500);
 }
+function renderFatal() {
+  try { appEl.innerHTML = '<div class="wrap" style="padding-top:48px"><a class="brand-fallback serif" href="#/" style="font-size:28px;text-decoration:none;color:inherit">MtlMaison</a></div>' + pageError(t('errorT'), t('errorP')).replace('<a class="btn" href="#/">' + t('backHome') + '</a>', '<button class="btn" type="button" onclick="location.reload()">' + t('reload') + '</button>'); } catch (e2) { appEl.textContent = 'MtlMaison: something went wrong. Please reload the page.'; }
+}
 function render(keepScroll) {
+  try { renderMain(keepScroll); } catch (err) { if (window.console) console.error(err); renderFatal(); }
+}
+function renderMain(keepScroll) {
   var r = route(), y = window.scrollY;
   var animMenu = S.menuAnim, animSheet = S.sheetAnim; S.menuAnim = false; S.sheetAnim = false;
   var body = { home: pageHome, cat: pageCat, item: pageItem, favourites: pageFavs, search: pageSearch, book: pageBook, privacy: pagePrivacy, cart: pageCart, how: pageHow, reply: pageReply }[r.n];
@@ -660,6 +736,7 @@ document.addEventListener('click', function (ev) {
   if (!el || el.tagName === 'SELECT' || el.tagName === 'INPUT' || el.tagName === 'FORM') return;
   var a = el.getAttribute('data-act'), id = el.getAttribute('data-id');
   if (a === 'sheet-bg') { if (ev.target !== el) return; S.sheet = null; S.copied = false; render(true); return; }
+  if (a === 'goto') { ev.preventDefault(); var gf = el.getAttribute('data-f'); var ge = document.getElementById('c-' + gf) || document.getElementById('f-' + gf) || document.getElementById('r-' + gf) || document.querySelector('.mopt'); if (ge) { ge.scrollIntoView({ block: 'center' }); ge.focus({ preventScroll: true }); } return; }
   if (a === 'copy-keep') return;
   if (el.tagName !== 'A') ev.preventDefault();
   if (a === 'fav') { toggleFav(id); S.popId = id; S.bump = true; render(true); }
@@ -698,11 +775,12 @@ document.addEventListener('input', function (ev) {
   else if (tg.id && tg.id.indexOf('r-') === 0) S.reply[tg.id.slice(2)] = tg.value;
 });
 function postJSON(url, data) {
+  function bad(code, j) { var e = new Error('fail'); e.code = code; e.fields = (j && j.fields) || []; return e; }
   return fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }).then(function (r) {
-    return r.json().then(function (j) { if (!r.ok || !j.ok) throw new Error('fail'); return j; }, function () { throw new Error('fail'); });
-  });
+    return r.json().then(function (j) { if (!r.ok || !j.ok) throw bad((j && j.error) || ('http' + r.status), j); return j; }, function () { throw bad('http' + r.status); });
+  }, function () { throw bad('offline'); });
 }
-function focusFirstError() { var e = document.querySelector('[aria-invalid="true"],.alert'); if (e) { var i = e.tagName === 'INPUT' || e.tagName === 'TEXTAREA' ? e : (e.closest('label') && e.closest('label').querySelector('input,textarea')) || e; if (i && i.focus) i.focus(); } }
+function focusFirstError() { var e = document.getElementById('errsum') || document.querySelector('[aria-invalid="true"]'); if (e) { if (e.scrollIntoView) e.scrollIntoView({ block: 'center' }); if (e.focus) e.focus({ preventScroll: true }); } }
 function submitCart() {
   var C = S.C, e = {};
   if (!cartItems().length) e.cart = t('errCart');
@@ -716,11 +794,19 @@ function submitCart() {
   var email = C.email.trim();
   postJSON('/api/request', { lang: lang, name: C.name.trim(), email: email, phone: C.phone.trim(), method: C.method, place: C.place.trim(), note: C.note.trim(), website: C.website || '', items: cartItems().map(function (i) { return { id: i.id, label: itemLabel(i) }; }) })
     .then(function (j) { S.sending = false; S.sent = { ref: j.ref, email: email }; cart = []; saveCart(); S.bump = false; render(false); window.scrollTo(0, 0); })
-    .catch(function () { S.sending = false; S.fail = true; render(true); });
+    .catch(function (er) {
+      S.sending = false; S.failCode = er && er.code; S.fail = true;
+      if (er && er.code === 'invalid' && er.fields && er.fields.length) {
+        var map = { cart: 'errCart', method: 'errMethod', place: 'errPlace', name: 'errName', email: 'errEmail' }, ce = {};
+        er.fields.forEach(function (k) { if (map[k]) ce[k] = t(map[k]); });
+        if (Object.keys(ce).length) { S.cartErr = ce; S.fail = false; }
+      }
+      render(true); focusFirstError();
+    });
 }
 function submitReply() {
   var R = S.reply, e = {};
-  if (!R.choice) e.choice = t('errMethod');
+  if (!R.choice) e.choice = t('errReplyChoice');
   if (!R.ref.trim()) e.ref = t('errRef');
   if (R.choice === 'change' && !R.msg.trim()) e.msg = t('errMsg');
   if (R.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(R.email.trim())) e.email = t('errEmail');
@@ -729,7 +815,7 @@ function submitReply() {
   R.sending = true; render(true);
   postJSON('/api/reply', { lang: lang, ref: R.ref.trim().toUpperCase(), type: R.choice, message: R.msg.trim(), email: R.email.trim(), website: R.website || '' })
     .then(function () { R.sending = false; R.done = R.choice; render(false); window.scrollTo(0, 0); })
-    .catch(function () { R.sending = false; R.fail = true; render(true); });
+    .catch(function (er) { R.sending = false; R.failCode = er && er.code; R.fail = true; render(true); focusFirstError(); });
 }
 document.addEventListener('submit', function (ev) {
   var f = ev.target, act = f.getAttribute('data-act');
@@ -739,7 +825,7 @@ document.addEventListener('submit', function (ev) {
   ev.preventDefault();
   S.errors = validate();
   var keys = Object.keys(S.errors);
-  if (keys.length) { render(true); var first = document.getElementById('f-' + keys[0]) || document.querySelector('.alert'); if (first) first.focus(); return; }
+  if (keys.length) { render(true); focusFirstError(); return; }
   var body = bookingText();
   S.booked = { body: body }; S.copied = false; render(false); window.scrollTo(0, 0);
   if (CONFIG.email) location.href = 'mailto:' + CONFIG.email + '?subject=' + encodeURIComponent(lang === 'fr' ? 'Demande de visite · MtlMaison' : 'Visit request · MtlMaison') + '&body=' + encodeURIComponent(body);
