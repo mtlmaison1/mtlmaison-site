@@ -86,6 +86,10 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     if (!url.pathname.startsWith('/api/')) return env.ASSETS.fetch(request);
+    if (url.pathname === '/api/selftest' && request.method === 'GET') { // temporary: lets the owner check email delivery
+      try { await sendMail(env, { subject: 'MtlMaison test email', body: 'If you read this, the website can email you.' }); return json({ ok: true, sent: true }); }
+      catch (e) { console.error('selftest failed', String(e && e.message || e)); return json({ ok: false, error: String(e && e.message || e) }, 502); }
+    }
     if (request.method !== 'POST') return json({ ok: false, error: 'method' }, 405);
     const origin = request.headers.get('Origin');
     if (origin) { try { if (!ALLOWED.test(new URL(origin).hostname)) return json({ ok: false, error: 'origin' }, 403); } catch (e) { return json({ ok: false, error: 'origin' }, 403); } }
@@ -97,7 +101,8 @@ export default {
       if (url.pathname === '/api/reply') return await handleReply(env, data);
       return json({ ok: false, error: 'notfound' }, 404);
     } catch (e) {
-      return json({ ok: false, error: 'send' }, 502);
+      console.error('send failed', String(e && e.message || e));
+      return json({ ok: false, error: 'send', detail: String(e && e.message || e).slice(0, 200) }, 502);
     }
   },
 };
