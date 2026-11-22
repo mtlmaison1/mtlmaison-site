@@ -10,6 +10,7 @@
   },
   "observability": { "enabled": true },
   "send_email": [
-    { "name": "MAILER", "destination_address": "mtlmaison1@gmail.com" }
+    { "name": "MAILER", "destination_address": "mtlmaison1@gmail.com" },
+    { "name": "EMAIL" }
   ]
 }

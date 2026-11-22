@@ -467,3 +467,10 @@ main.enter{animation:pageIn .5s ease backwards}
 .field{min-width:0}
 .field input,.field textarea{min-width:0;max-width:100%;box-sizing:border-box}
 .field .alert{box-sizing:border-box;max-width:100%;white-space:normal;font-size:13px}
+
+/* ===== sold out / special order ===== */
+.new.out{background:var(--espresso);color:var(--linen)}
+.special-tag{font-style:normal;color:var(--caramel);letter-spacing:.04em}
+.outbox{display:flex;gap:14px;align-items:flex-start;padding:16px 18px;background:var(--paper);border-left:3px solid var(--caramel)}
+.outbox strong{display:block;font-size:16px;font-weight:600;margin-bottom:2px}
+.outbox p{margin:0;font-size:14px;line-height:1.55;color:var(--choc)}

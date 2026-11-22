@@ -278,6 +278,29 @@ function ico(name, size, sw, fill) {
 function isFav(id) { return favs.indexOf(id) > -1; }
 function isInCart(id) { return cart.indexOf(id) > -1; }
 function saveCart() { store('mm_cart', JSON.stringify(cart)); }
+
+var T4 = {
+  en: {
+    outBadge: 'Sold out', orderIt: 'We can order it', orderItBtn: 'Order it for me',
+    outT: 'Not in stock right now', outP: 'We can order this piece for you. Add it to your cart like any other piece and we confirm availability, price and delay in the email we send you.',
+    specialTag: 'Special order', specialMeta: 'We order it for you',
+    cartSpecial: 'Special order: we confirm availability, price and delay in your email.',
+    sentCartP2: function (e) { return 'Thank you. A confirmation is on its way to ' + e + ' (check your spam folder if you do not see it). We will email you your final price.'; },
+    goneAsk: 'Ask us to find it',
+    faqOut: ['What if a piece is sold out?', 'Tell us anyway. We can often order it for you. Add it to your cart as a special order and we confirm availability, price and delay in your email. You decide after that.']
+  },
+  fr: {
+    outBadge: 'Épuisé', orderIt: 'Nous pouvons la commander', orderItBtn: 'Commandez-la pour moi',
+    outT: 'Pas en stock pour le moment', outP: 'Nous pouvons commander cette pièce pour vous. Ajoutez-la au panier comme les autres et nous confirmons la disponibilité, le prix et le délai dans le courriel que nous vous envoyons.',
+    specialTag: 'Commande spéciale', specialMeta: 'Nous la commandons pour vous',
+    cartSpecial: 'Commande spéciale : nous confirmons la disponibilité, le prix et le délai dans votre courriel.',
+    sentCartP2: function (e) { return 'Merci. Une confirmation est en route vers ' + e + ' (vérifiez vos courriels indésirables au besoin). Nous vous enverrons votre prix final.'; },
+    goneAsk: 'Demandez-nous de la trouver',
+    faqOut: ['Et si une pièce est épuisée?', 'Dites-le-nous quand même. Nous pouvons souvent la commander pour vous. Ajoutez-la au panier comme commande spéciale et nous confirmons la disponibilité, le prix et le délai dans votre courriel. Vous décidez ensuite.']
+  }
+};
+['en', 'fr'].forEach(function (l) { for (var k in T4[l]) T[l][k] = T4[l][k]; T[l].faq = T[l].faq.concat([T4[l].faqOut]); });
+function isOut(it) { return it && it.status === 'out'; }
 function toggleCart(id) { var i = cart.indexOf(id); if (i > -1) cart.splice(i, 1); else cart.push(id); saveCart(); }
 function toggleFav(id) { var i = favs.indexOf(id); if (i > -1) favs.splice(i, 1); else favs.push(id); store('mm_favs', JSON.stringify(favs)); }
 function byId(id) { for (var i = 0; i < ITEMS.length; i++) if (ITEMS[i].id === id) return ITEMS[i]; return null; }
@@ -302,11 +325,11 @@ function photoOf(it, big) {
 }
 function card(it) {
   var on = isFav(it.id), inC = isInCart(it.id);
-  return '<article class="card"><a class="open" href="#/p/' + encodeURIComponent(it.id) + '"><span class="ph">' + photoOf(it) + (it.isNew ? '<span class="new">' + t('new') + '</span>' : '') + '</span>' +
+  return '<article class="card"><a class="open" href="#/p/' + encodeURIComponent(it.id) + '"><span class="ph">' + photoOf(it) + (isOut(it) ? '<span class="new out">' + t('outBadge') + '</span>' : it.isNew ? '<span class="new">' + t('new') + '</span>' : '') + '</span>' +
     '<span class="brand">' + esc(it.brand) + '</span><span class="pname">' + esc(it.name) + '</span>' +
-    '<span class="meta">' + esc(it.size) + (it.condition ? ' · ' + esc(it.condition) : '') + '<br>' + t('priceReq') + '</span></a>' +
+    '<span class="meta">' + esc(it.size) + (it.condition ? ' · ' + esc(it.condition) : '') + '<br>' + (isOut(it) ? '<em class="special-tag">' + t('orderIt') + '</em>' : t('priceReq')) + '</span></a>' +
     '<button class="heart" data-act="fav" data-id="' + esc(it.id) + '" aria-pressed="' + on + '" aria-label="' + (on ? t('removeFav') : t('addFav')) + ': ' + esc(it.name) + '" style="color:' + (on ? 'var(--caramel)' : 'var(--espresso)') + '">' + ico('heart', 22, 1.6, on ? 'currentColor' : 'none') + '</button>' +
-    '<button class="ask cartbtn' + (inC ? ' in' : '') + '" data-act="cart" data-id="' + esc(it.id) + '" aria-pressed="' + inC + '">' + (inC ? ico('check', 16, 1.8) + ' ' + t('inCart') : ico('bag', 16, 1.5) + ' ' + t('addCart')) + '</button></article>';
+    '<button class="ask cartbtn' + (inC ? ' in' : '') + '" data-act="cart" data-id="' + esc(it.id) + '" aria-pressed="' + inC + '">' + (inC ? ico('check', 16, 1.8) + ' ' + t('inCart') : ico('bag', 16, 1.5) + ' ' + t(isOut(it) ? 'orderItBtn' : 'addCart')) + '</button></article>';
 }
 function sortItems(list) {
   var l = list.slice();
@@ -422,7 +445,7 @@ function pageCat(r) {
 }
 
 function pageItem(r) {
-  var it = byId(r.id); if (!it) return pageError(t('e404T'), t('itemGone'));
+  var it = byId(r.id); if (!it) return pageError(t('e404T'), t('itemGone'), '<button class="btn-o" data-act="ask-general">' + t('goneAsk') + '</button>');
   var on = isFav(it.id), inC = isInCart(it.id);
   var photos = it.photos || [];
   var thumbs = photos.length > 1 ? '<div class="thumbs">' + photos.slice(0, 4).map(function (p, i) { return '<button data-act="photo" data-i="' + i + '" aria-pressed="' + (i === (S.photo || 0)) + '" aria-label="Photo ' + (i + 1) + '"><img src="assets/items/' + esc(p) + '" alt=""></button>'; }).join('') + '</div>' : '';
@@ -430,11 +453,12 @@ function pageItem(r) {
   var related = ITEMS.filter(function (i) { return i.cat === it.cat && i.id !== it.id; }).slice(0, 4);
   var parts = [[t(it.cat), '#/c/' + it.cat]]; if (it.sub) parts.push([t(it.sub), '#/c/accessories/' + it.sub]); parts.push([esc(it.name)]);
   return '<main id="main" tabindex="-1" class="wrap page">' + crumbs(parts) +
-    '<div class="item-wrap"><div class="gallery"><div class="ph" style="aspect-ratio:4/5">' + main + (it.isNew ? '<span class="new">' + t('new') + '</span>' : '') + '</div>' + thumbs + '</div>' +
+    '<div class="item-wrap"><div class="gallery"><div class="ph" style="aspect-ratio:4/5">' + main + (isOut(it) ? '<span class="new out">' + t('outBadge') + '</span>' : it.isNew ? '<span class="new">' + t('new') + '</span>' : '') + '</div>' + thumbs + '</div>' +
     '<div class="info"><p class="brand" style="margin:0">' + esc(it.brand) + '</p><h1>' + esc(it.name) + '</h1><p class="serif" style="margin:0;font-size:28px">' + t('priceReq') + '</p>' +
     '<dl><dt>' + t('size') + '</dt><dd>' + esc(it.size) + '</dd><dt>' + t('condition') + '</dt><dd>' + esc(it.condition) + '</dd><dt>' + t('category') + '</dt><dd>' + esc(catLabel(it)) + '</dd><dt>' + t('ref') + '</dt><dd>' + esc(it.id) + '</dd></dl>' +
     (it.details ? '<p class="muted" style="margin:0">' + esc(it.details) + '</p>' : '') +
-    '<div class="actions"><button class="btn cartbtn" data-act="cart" data-id="' + esc(it.id) + '" aria-pressed="' + inC + '">' + ico(inC ? 'check' : 'bag', 20, 1.5) + (inC ? t('inCart') + ' · ' + t('removeCart') : t('addCart')) + '</button>' +
+    (isOut(it) ? '<div class="outbox"><span class="fx" style="color:var(--caramel)">' + ico('truck', 26, 1.4) + '</span><div><strong>' + t('outT') + '</strong><p>' + t('outP') + '</p></div></div>' : '') +
+    '<div class="actions"><button class="btn cartbtn" data-act="cart" data-id="' + esc(it.id) + '" aria-pressed="' + inC + '">' + ico(inC ? 'check' : 'bag', 20, 1.5) + (inC ? t('inCart') + ' · ' + t('removeCart') : t(isOut(it) ? 'orderItBtn' : 'addCart')) + '</button>' +
     '<button class="btn-o" data-act="fav" data-id="' + esc(it.id) + '" aria-pressed="' + on + '">' + ico('heart', 20, 1.5, on ? 'currentColor' : 'none') + (on ? t('saved') : t('save')) + '</button>' +
     '<button class="btn-o" data-act="ask" data-id="' + esc(it.id) + '">' + ico('message', 20, 1.5) + t('askPiece') + '</button></div>' +
     '<p class="note">' + ico('pin', 18, 1.5) + '<span>' + t('byAppt') + '</span></p></div></div>' +
@@ -503,7 +527,7 @@ function cartBtn() {
   return '<a class="icon-btn" href="#/cart" aria-label="' + t('cart') + (cart.length ? ' (' + cart.length + ')' : '') + '">' + ico('bag', 24) + (cart.length ? '<span class="badge">' + cart.length + '</span>' : '') + '</a>';
 }
 function cartRow(it) {
-  return '<div class="cart-row"><a class="cart-th" href="#/p/' + encodeURIComponent(it.id) + '"><span class="ph">' + photoOf(it) + '</span></a><div class="cart-info"><span class="brand" style="margin:0">' + esc(it.brand) + '</span><a class="pname" href="#/p/' + encodeURIComponent(it.id) + '" style="color:inherit;text-decoration:none">' + esc(it.name) + '</a><span class="meta">' + esc(it.size) + (it.condition ? ' · ' + esc(it.condition) : '') + '<br>' + t('priceReq') + '</span></div>' +
+  return '<div class="cart-row"><a class="cart-th" href="#/p/' + encodeURIComponent(it.id) + '"><span class="ph">' + photoOf(it) + '</span></a><div class="cart-info"><span class="brand" style="margin:0">' + esc(it.brand) + '</span><a class="pname" href="#/p/' + encodeURIComponent(it.id) + '" style="color:inherit;text-decoration:none">' + esc(it.name) + '</a><span class="meta">' + esc(it.size) + (it.condition ? ' · ' + esc(it.condition) : '') + '<br>' + (isOut(it) ? '<em class="special-tag">' + t('specialTag') + '</em>' : t('priceReq')) + '</span></div>' +
     '<button class="icon-btn" data-act="cart-remove" data-id="' + esc(it.id) + '" aria-label="' + t('removeCart') + ': ' + esc(it.name) + '">' + ico('trash', 22, 1.4) + '</button></div>';
 }
 function cartFieldHtml(id, label, type, extra) {
@@ -514,7 +538,7 @@ function pageCart() {
   var head = crumbs([[t('cart')]]);
   if (S.sent) {
     var nx = [0, 2, 3].map(function (i, k) { return '<li>' + esc(t('sTitle')[i]) + '</li>'; }).join('');
-    return '<main id="main" tabindex="-1" class="wrap page book">' + head + '<div class="done"><span class="done-ico" style="color:var(--caramel)">' + ico('check', 56, 1.4) + '</span><h1>' + t('sentCartT') + '</h1><p>' + esc(t('sentCartP')(S.sent.email)) + '</p>' +
+    return '<main id="main" tabindex="-1" class="wrap page book">' + head + '<div class="done"><span class="done-ico" style="color:var(--caramel)">' + ico('check', 56, 1.4) + '</span><h1>' + t('sentCartT') + '</h1><p>' + esc(S.sent.mailed ? t('sentCartP2')(S.sent.email) : t('sentCartP')(S.sent.email)) + '</p>' +
       '<p class="refbox"><span class="eyebrow">' + t('refL') + '</span><strong class="serif">' + esc(S.sent.ref) + '</strong></p><p class="muted" style="margin:0">' + t('refNote') + '</p>' +
       '<div class="hero-btns" style="width:100%"><a class="btn" href="#/how">' + t('howNav') + '</a><a class="btn-o" href="#/c/all">' + t('browse') + '</a></div></div></main>';
   }
@@ -527,7 +551,7 @@ function pageCart() {
     [['pickup', 'pin'], ['delivery', 'truck']].map(function (m) { var on = C.method === m[0]; return '<button type="button" class="mopt' + (on ? ' on' : '') + '" role="radio" aria-checked="' + on + '" data-act="method" data-m="' + m[0] + '"><span class="fx">' + ico(m[1], 30, 1.3) + '</span><strong>' + t(m[0]) + '</strong><span>' + t(m[0] + 'P') + '</span></button>'; }).join('') + '</div>' + (er.method ? '<p class="alert" role="alert">' + er.method + '</p>' : '') + '</fieldset>';
   var place = C.method === 'delivery' ? cartFieldHtml('place', t('fPlace'), 'text', 'autocomplete="address-level2"') : '';
   return '<main id="main" tabindex="-1" class="wrap page">' + head + '<div class="cat-head"><div class="cat-title"><span class="cat-ico fx" style="color:var(--caramel)">' + ico('bag', 44, 1.2) + '</span><div><h1>' + t('cartT') + '</h1><p class="count">' + plural(items.length) + '</p></div></div></div>' +
-    '<p class="hint">' + ico('new', 20, 1.4) + '<span>' + t('cartHint') + '</span></p>' +
+    '<p class="hint">' + ico('new', 20, 1.4) + '<span>' + t('cartHint') + '</span></p>' + (items.some(isOut) ? '<p class="hint">' + ico('truck', 20, 1.4) + '<span>' + t('cartSpecial') + '</span></p>' : '') +
     '<div class="cart-grid"><div class="cart-list">' + items.map(cartRow).join('') + '<a class="btn-link" href="#/c/all" style="margin-top:12px">' + t('browse') + '</a></div>' +
     '<form class="cart-form" data-act="cart-send" novalidate>' + errSummary(er, ['method', 'place', 'name', 'email']) + methods + place +
     '<h2 class="serif" style="margin:6px 0 0;font-size:26px;font-weight:400">' + t('yourDetails') + '</h2>' +
@@ -542,7 +566,7 @@ function pageCart() {
 function cartText() {
   var C = S.C, fr = lang === 'fr';
   return (fr ? 'Demande · MtlMaison' : 'Request · MtlMaison') + '\n\n' + (fr ? 'Nom : ' : 'Name: ') + C.name.trim() + '\n' + (fr ? 'Courriel : ' : 'Email: ') + C.email.trim() + '\n' + (C.phone.trim() ? (fr ? 'Téléphone : ' : 'Phone: ') + C.phone.trim() + '\n' : '') +
-    (fr ? 'Mode : ' : 'Method: ') + (C.method === 'delivery' ? t('delivery') + (C.place.trim() ? ' (' + C.place.trim() + ')' : '') : t('pickup')) + '\n' + (C.note.trim() ? '\n' + C.note.trim() + '\n' : '') + '\n' + (fr ? 'Pièces :' : 'Pieces:') + '\n' + cartItems().map(function (i) { return '- ' + itemLabel(i); }).join('\n');
+    (fr ? 'Mode : ' : 'Method: ') + (C.method === 'delivery' ? t('delivery') + (C.place.trim() ? ' (' + C.place.trim() + ')' : '') : t('pickup')) + '\n' + (C.note.trim() ? '\n' + C.note.trim() + '\n' : '') + '\n' + (fr ? 'Pièces :' : 'Pieces:') + '\n' + cartItems().map(function (i) { return '- ' + itemLabel(i) + (isOut(i) ? ' [' + t('specialTag') + ']' : ''); }).join('\n');
 }
 
 /* ---------- how it works ---------- */
@@ -601,9 +625,9 @@ function failText(code, kind) {
   if (kind !== 'reply' && (code === 'origin' || code === 'notfound' || code === 'method' || code === 'json')) return t('failBlocked');
   return t(pre + 'Server');
 }
-function pageError(title, text) {
+function pageError(title, text, extra) {
   return '<main id="main" tabindex="-1" class="wrap page errpage"><p class="eyebrow">' + title + '</p><h1>' + title + '</h1><p class="muted" style="max-width:56ch">' + text + '</p>' +
-    '<div class="hero-btns"><a class="btn" href="#/">' + t('backHome') + '</a><a class="btn-o" href="#/c/all">' + t('collection') + '</a></div></main>';
+    '<div class="hero-btns"><a class="btn" href="#/">' + t('backHome') + '</a><a class="btn-o" href="#/c/all">' + t('collection') + '</a>' + (extra || '') + '</div></main>';
 }
 function page404() { return pageError(t('e404T'), t('e404P')); }
 
@@ -792,8 +816,8 @@ function submitCart() {
   if (Object.keys(e).length) { render(true); focusFirstError(); return; }
   S.sending = true; render(true);
   var email = C.email.trim();
-  postJSON('/api/request', { lang: lang, name: C.name.trim(), email: email, phone: C.phone.trim(), method: C.method, place: C.place.trim(), note: C.note.trim(), website: C.website || '', items: cartItems().map(function (i) { return { id: i.id, label: itemLabel(i) }; }) })
-    .then(function (j) { S.sending = false; S.sent = { ref: j.ref, email: email }; cart = []; saveCart(); S.bump = false; render(false); window.scrollTo(0, 0); })
+  postJSON('/api/request', { lang: lang, name: C.name.trim(), email: email, phone: C.phone.trim(), method: C.method, place: C.place.trim(), note: C.note.trim(), website: C.website || '', items: cartItems().map(function (i) { return { id: i.id, label: itemLabel(i), special: isOut(i) }; }) })
+    .then(function (j) { S.sending = false; S.sent = { ref: j.ref, email: email, mailed: !!j.mailed }; cart = []; saveCart(); S.bump = false; render(false); window.scrollTo(0, 0); })
     .catch(function (er) {
       S.sending = false; S.failCode = er && er.code; S.fail = true;
       if (er && er.code === 'invalid' && er.fields && er.fields.length) {
