@@ -43,7 +43,7 @@ var T = {
     privNote: 'We only use this to answer your request.', privLink: 'Privacy policy',
     pick: 'Pick a time', calHelp: 'Pick a time that suits you.', openCal: 'Open the calendar in a new tab',
     hoursL: 'Hours', followL: 'Follow', contactL: 'Contact', shopL: 'Shop',
-    rights: 'MtlMaison · Montréal', langBtn: 'FR', langLbl: 'Passer au français',
+    rights: 'MtlMaison · Montréal', contactUs: 'Contact us', langBtn: 'FR', langLbl: 'Passer au français',
     privT: 'Privacy policy', privUpd: 'Last updated: November 2026',
     privBody: function (c) { return [
       ['Who we are', 'MtlMaison is a Montréal boutique that sells authentic designer clothes and accessories by appointment. The person in charge of personal information is ' + c.name + ', reachable at ' + c.email + '.'],
@@ -88,7 +88,7 @@ var T = {
     privNote: 'Nous utilisons ceci seulement pour répondre à votre demande.', privLink: 'Politique de confidentialité',
     pick: 'Choisir une heure', calHelp: 'Choisissez l’heure qui vous convient.', openCal: 'Ouvrir le calendrier dans un nouvel onglet',
     hoursL: 'Heures', followL: 'Suivez-nous', contactL: 'Contact', shopL: 'Boutique',
-    rights: 'MtlMaison · Montréal', langBtn: 'EN', langLbl: 'Switch to English',
+    rights: 'MtlMaison · Montréal', contactUs: 'Nous joindre', langBtn: 'EN', langLbl: 'Switch to English',
     privT: 'Politique de confidentialité', privUpd: 'Dernière mise à jour : novembre 2026',
     privBody: function (c) { return [
       ['Qui nous sommes', 'MtlMaison est une boutique montréalaise qui vend des vêtements et accessoires de designer authentiques, sur rendez-vous. La personne responsable des renseignements personnels est ' + c.name + ', joignable à ' + c.email + '.'],
@@ -108,13 +108,14 @@ var lang = store('mm_lang') || ((navigator.language || '').toLowerCase().indexOf
 if (lang !== 'fr') lang = 'en';
 var favs = [];
 try { favs = JSON.parse(store('mm_favs') || '[]'); } catch (e) { favs = []; }
-var S = { mega: false, menu: false, sheet: null, sort: 'new', size: '', favCat: 'all', booked: null, copied: false, errors: {}, form: { name: '', email: '', phone: '', date: '', time: '', note: '' }, q: '' };
+var S = { menuAcc: false, menuAnim: false, sheetAnim: false, popId: null, bump: false, mega: false, menu: false, sheet: null, sort: 'new', size: '', favCat: 'all', booked: null, copied: false, errors: {}, form: { name: '', email: '', phone: '', date: '', time: '', note: '' }, q: '' };
 
 function t(k) { var v = T[lang][k]; return v === undefined ? T.en[k] : v; }
 function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
 function ico(name, size, sw, fill) {
   var body = (ICONS[name] || '').replace(/__W2__/g, String((sw || 1.5) / 0.46));
-  return '<span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" width="' + size + '" height="' + size + '" fill="' + (fill || 'none') + '" stroke="currentColor" stroke-width="' + (sw || 1.5) + '" stroke-linecap="round" stroke-linejoin="round">' + body + '</svg></span>';
+  if (name === 'accessories') body = body.replace(/<g transform="([^"]+)" stroke-width="([^"]+)">/g, '<g transform="$1" stroke-width="$2"><g class="mini">').replace(/<\/g>/g, '</g></g>');
+  return '<span class="ico" aria-hidden="true"><svg class="ic ic-' + name + '" viewBox="0 0 24 24" width="' + size + '" height="' + size + '" fill="' + (fill || 'none') + '" stroke="currentColor" stroke-width="' + (sw || 1.5) + '" stroke-linecap="round" stroke-linejoin="round">' + body + '</svg></span>';
 }
 function isFav(id) { return favs.indexOf(id) > -1; }
 function toggleFav(id) { var i = favs.indexOf(id); if (i > -1) favs.splice(i, 1); else favs.push(id); store('mm_favs', JSON.stringify(favs)); }
@@ -160,8 +161,8 @@ function looking() {
 
 /* ---------- layout ---------- */
 function logo(light) {
-  return '<a class="logo" href="#/" aria-label="MtlMaison"><span class="mm' + (light ? ' rev' : '') + '" style="width:44px;height:44px;font-size:26px"><span>M</span><span>M</span></span>' +
-    (light ? '<span class="serif" style="font-size:26px;color:var(--linen)">MtlMaison</span>' : '<img src="assets/mtlmaison-name.png" alt="" width="120" height="36" style="height:36px;width:auto;mix-blend-mode:multiply">') + '</a>';
+  if (!light) return '<a class="logo" href="#/" aria-label="MtlMaison"><img class="logo-img" src="assets/mtlmaison-name.png" alt="MtlMaison" width="132" height="40"></a>';
+  return '<a class="logo" href="#/" aria-label="MtlMaison"><span class="mm rev" style="width:44px;height:44px;font-size:26px"><span>M</span><span>M</span></span><span class="serif" style="font-size:26px;color:var(--linen)">MtlMaison</span></a>';
 }
 function langBtn() { return '<button class="lang" data-act="lang" aria-label="' + t('langLbl') + '">' + t('langBtn') + '</button>'; }
 function favBtn() {
@@ -177,26 +178,33 @@ function header(r) {
   nav += '<a href="#/c/all"' + (cur === 'all' ? ' aria-current="page"' : '') + '>' + t('all') + '</a>';
   var mega = '';
   if (S.mega) {
-    mega = '<div class="mega" id="mega">' + SUBS.map(function (s) { return '<a href="#/c/accessories/' + s + '"><span style="color:var(--caramel)">' + ico(s, 40, 1.2) + '</span>' + t(s) + '</a>'; }).join('') + '</div>';
+    mega = '<div class="mega" id="mega">' + SUBS.map(function (s, k) { return '<a class="fx" style="--i:' + k + '" href="#/c/accessories/' + s + '"><span style="color:var(--caramel)">' + ico(s, 40, 1.2) + '</span>' + t(s) + '</a>'; }).join('') + '</div>';
   }
   return '<div class="topbar">' + t('topbar') + '</div><header class="site">' +
     '<div class="hdr"><div class="hdr-side">' + langBtn() + '</div>' + logo() + '<div class="hdr-side end"><a class="icon-btn" href="#/search" aria-label="' + t('search') + '">' + ico('search', 24) + '</a>' + favBtn() + '</div></div>' +
-    '<div class="hdr-m"><button class="icon-btn" data-act="menu" aria-label="' + t('menu') + '">' + ico('menu', 26) + '</button>' + logo() + '<span style="display:flex">' + '<a class="icon-btn" href="#/search" aria-label="' + t('search') + '">' + ico('search', 24) + '</a>' + favBtn() + '</span></div>' +
+    '<div class="hdr-m"><button class="icon-btn burger" data-act="menu" aria-label="' + t('menu') + '"><span class="bl"></span><span class="bl"></span><span class="bl"></span></button>' + logo() + '<span style="display:flex">' + '<a class="icon-btn" href="#/search" aria-label="' + t('search') + '">' + ico('search', 24) + '</a>' + favBtn() + '</span></div>' +
     '<nav class="catnav" aria-label="' + t('shop') + '">' + nav + '</nav>' + mega + '</header>';
 }
-function mobileMenu() {
+function mobileMenu(still) {
   if (!S.menu) return '';
-  var links = '<a href="#/c/new">' + ico('new', 24, 1.3) + t('new') + '</a>';
-  CATS.forEach(function (c) { links += '<a href="#/c/' + c + '">' + ico(c, 24, 1.3) + t(c) + '</a>'; });
-  SUBS.forEach(function (s) { links += '<a href="#/c/accessories/' + s + '" style="font-size:19px;padding-left:38px">' + t(s) + '</a>'; });
-  links += '<a href="#/c/all">' + ico('all', 24, 1.3) + t('all') + '</a><a href="#/favourites">' + ico('heart', 24, 1.3) + t('favourites') + '</a><a href="#/book">' + ico('calendar', 24, 1.3) + t('bookVisit') + '</a>';
-  return '<div class="menu" role="dialog" aria-modal="true" aria-label="' + t('menu') + '"><div class="menu-head">' + logo() + '<span style="display:flex">' + langBtn() + '<button class="icon-btn" data-act="menu-close" aria-label="' + t('close') + '">' + ico('close', 26) + '</button></span></div><div class="menu-list">' + links + '</div></div>';
+  var n = 0;
+  function li(href, icon, label) { return '<a href="' + href + '" class="fx" style="--i:' + (n++) + '">' + ico(icon, 26, 1.3) + '<span>' + label + '</span></a>'; }
+  var links = li('#/c/new', 'new', t('new'));
+  CATS.forEach(function (c) {
+    if (c === 'accessories') {
+      links += '<div class="menu-acc' + (S.menuAcc ? ' open' : '') + '" style="--i:' + (n++) + '"><button class="fx acc-btn" data-act="menu-acc" aria-expanded="' + !!S.menuAcc + '" aria-controls="acc-sub">' + ico('accessories', 26, 1.3) + '<span>' + t('accessories') + '</span><span class="chev">' + ico('chevron', 20, 1.6) + '</span></button>' +
+        '<div class="acc-sub" id="acc-sub"><div class="acc-in"><a href="#/c/accessories" class="fx" style="--j:0">' + ico('accessories', 24, 1.3) + '<span>' + t('all') + '</span></a>' +
+        SUBS.map(function (s, k) { return '<a href="#/c/accessories/' + s + '" class="fx" style="--j:' + (k + 1) + '">' + ico(s, 24, 1.3) + '<span>' + t(s) + '</span></a>'; }).join('') + '</div></div></div>';
+    } else links += li('#/c/' + c, c, t(c));
+  });
+  links += li('#/c/all', 'all', t('all')) + li('#/favourites', 'heart', t('favourites')) + li('#/book', 'calendar', t('bookVisit'));
+  return '<div class="menu' + (still ? ' still' : '') + '" role="dialog" aria-modal="true" aria-label="' + t('menu') + '"><div class="menu-head"><span class="mm menu-mm" style="width:56px;height:56px;font-size:32px" aria-hidden="true"><span>M</span><span>M</span></span><span style="display:flex">' + langBtn() + '<button class="icon-btn" data-act="menu-close" aria-label="' + t('close') + '">' + ico('close', 26) + '</button></span></div><div class="menu-list">' + links + '</div></div>';
 }
 function footer() {
   var c = CONFIG, contact = '';
   if (c.instagram) contact += '<a href="https://instagram.com/' + esc(c.instagram) + '" target="_blank" rel="noopener">Instagram</a>';
   if (c.tiktok) contact += '<a href="https://tiktok.com/@' + esc(c.tiktok) + '" target="_blank" rel="noopener">TikTok</a>';
-  if (c.email) contact += '<a href="mailto:' + esc(c.email) + '">' + esc(c.email) + '</a>';
+  if (c.email) contact += '<a href="mailto:' + esc(c.email) + '">' + t('contactUs') + '</a>';
   if (c.phone) contact += '<a href="tel:' + esc(c.phone) + '">' + esc(c.phone) + '</a>';
   var hrs = c.hours && c.hours[lang] ? '<div><p class="lbl">' + t('hoursL') + '</p><span>' + esc(c.hours[lang]) + '</span></div>' : '';
   return '<footer class="site"><div class="wrap foot"><div class="foot-top"><div class="foot-brand">' + logo(true) + '</div><div class="foot-cols">' +
@@ -212,8 +220,8 @@ function crumbs(parts) {
 function pageHome() {
   var news = ITEMS.filter(function (i) { return i.isNew; }).slice(0, 8);
   if (!news.length) news = ITEMS.slice(0, 8);
-  var tiles = CATS.map(function (c) { return '<a class="tile" href="#/c/' + c + '"><span class="sq" style="color:var(--caramel)">' + ico(c, 72, 1) + '</span><span class="nm">' + t(c) + '</span><span class="ds">' + t(c + '_d') + '</span></a>'; }).join('');
-  var tag = '<span class="tagmark"><svg viewBox="0 0 300 300" fill="none" stroke="#A3643A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M150 18 C163 18 172 27 172 40 C172 46 169 51 165 54 L262 150 C268 156 268 164 262 170 L170 262 C164 268 156 268 150 262 L38 150 C32 144 32 136 38 130 L135 54 C131 51 128 46 128 40 C128 27 137 18 150 18 Z" transform="rotate(0 150 150)" opacity=".0"/><path d="M96 38 H204 A22 22 0 0 1 226 60 V264 A22 22 0 0 1 204 286 H96 A22 22 0 0 1 74 264 V60 A22 22 0 0 1 96 38 Z"/><circle cx="150" cy="62" r="8"/><path d="M150 54 C150 30 132 14 112 10"/></svg><span class="mono"><span>M</span><span>M</span></span></span>';
+  var tiles = CATS.map(function (c) { return '<a class="tile fx" href="#/c/' + c + '"><span class="sq" style="color:var(--caramel)">' + ico(c, 72, 1) + '</span><span class="nm">' + t(c) + '</span><span class="ds">' + t(c + '_d') + '</span></a>'; }).join('');
+  var tag = '<span class="tagmark"><span class="tagsway"><svg viewBox="0 0 300 300" fill="none" stroke="#A3643A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M150 18 C163 18 172 27 172 40 C172 46 169 51 165 54 L262 150 C268 156 268 164 262 170 L170 262 C164 268 156 268 150 262 L38 150 C32 144 32 136 38 130 L135 54 C131 51 128 46 128 40 C128 27 137 18 150 18 Z" transform="rotate(0 150 150)" opacity=".0"/><path d="M96 38 H204 A22 22 0 0 1 226 60 V264 A22 22 0 0 1 204 286 H96 A22 22 0 0 1 74 264 V60 A22 22 0 0 1 96 38 Z"/><circle cx="150" cy="62" r="8"/><path d="M150 54 C150 30 132 14 112 10"/></svg><span class="mono"><span>M</span><span>M</span></span></span></span>';
   var steps = [['h1t', 'h1p'], ['h2t', 'h2p'], ['h3t', 'h3p']].map(function (s, i) { return '<div class="step"><p class="eyebrow">0' + (i + 1) + '</p><h3>' + t(s[0]) + '</h3><p>' + t(s[1]) + '</p></div>'; }).join('');
   var why = [['w1t', 'w1p'], ['w2t', 'w2p'], ['w3t', 'w3p']].map(function (s) { return '<div class="why"><h3>' + t(s[0]) + '</h3><p>' + t(s[1]) + '</p></div>'; }).join('');
   return '<main id="main" tabindex="-1">' +
@@ -239,12 +247,12 @@ function pageCat(r) {
   var icoName = sub || (CATS.indexOf(cat) > -1 ? cat : cat === 'new' ? 'new' : 'all');
   var subs = '';
   if (cat === 'accessories') {
-    subs = '<div class="chips scroll"><a class="subchip' + (!sub ? ' on' : '') + '" href="#/c/accessories"><span style="color:var(--caramel)">' + ico('accessories', 30, 1.3) + '</span>' + t('all') + '</a>' +
-      SUBS.map(function (s) { return '<a class="subchip' + (sub === s ? ' on' : '') + '" href="#/c/accessories/' + s + '"><span style="color:var(--caramel)">' + ico(s, 30, 1.3) + '</span>' + t(s) + '</a>'; }).join('') + '</div>';
+    subs = '<div class="chips scroll"><a class="fx subchip' + (!sub ? ' on' : '') + '" href="#/c/accessories"><span style="color:var(--caramel)">' + ico('accessories', 30, 1.3) + '</span>' + t('all') + '</a>' +
+      SUBS.map(function (s) { return '<a class="fx subchip' + (sub === s ? ' on' : '') + '" href="#/c/accessories/' + s + '"><span style="color:var(--caramel)">' + ico(s, 30, 1.3) + '</span>' + t(s) + '</a>'; }).join('') + '</div>';
   }
   var sizeBar = sizes.length > 1 ? '<div class="sizes"><span class="lbl">' + t('size') + '</span><div class="chips scroll"><button class="chip' + (!S.size ? ' on' : '') + '" data-act="size" data-size="" aria-pressed="' + !S.size + '">' + t('allSizes') + '</button>' + sizes.map(function (s) { return '<button class="chip' + (S.size === s ? ' on' : '') + '" data-act="size" data-size="' + esc(s) + '" aria-pressed="' + (S.size === s) + '">' + esc(s) + '</button>'; }).join('') + '</div><span class="count">' + plural(shown.length) + '</span></div>' : '';
   return '<main id="main" tabindex="-1" class="wrap page">' + crumbs(parts) +
-    '<div class="cat-head"><div class="cat-title"><span class="cat-ico" style="color:var(--caramel)">' + ico(icoName, 44, 1.2) + '</span><div><h1>' + title + '</h1>' + (sizes.length > 1 ? '' : '<p class="count">' + plural(shown.length) + '</p>') + '</div></div>' +
+    '<div class="cat-head"><div class="cat-title"><span class="cat-ico fx" style="color:var(--caramel)">' + ico(icoName, 44, 1.2) + '</span><div><h1>' + title + '</h1>' + (sizes.length > 1 ? '' : '<p class="count">' + plural(shown.length) + '</p>') + '</div></div>' +
     '<label class="sort">' + t('sort') + '<select data-act="sort"><option value="new"' + (S.sort === 'new' ? ' selected' : '') + '>' + t('sortNew') + '</option><option value="az"' + (S.sort === 'az' ? ' selected' : '') + '>' + t('sortAz') + '</option></select></label></div>' +
     subs + sizeBar + '<div class="bar"></div>' +
     (shown.length ? grid(shown) : empty(t('noPieces'), t('noPiecesP'))) + looking() + '</main>';
@@ -278,7 +286,7 @@ function pageFavs() {
   var tabs = list.length ? '<div class="chips scroll" role="tablist"><button class="chip' + (S.favCat === 'all' ? ' on' : '') + '" role="tab" aria-selected="' + (S.favCat === 'all') + '" data-act="favcat" data-c="all">' + t('all') + ' (' + list.length + ')</button>' +
     cats.map(function (c) { return '<button class="chip' + (S.favCat === c ? ' on' : '') + '" role="tab" aria-selected="' + (S.favCat === c) + '" data-act="favcat" data-c="' + c + '">' + t(c) + ' (' + list.filter(function (i) { return i.cat === c; }).length + ')</button>'; }).join('') + '</div>' : '';
   return '<main id="main" tabindex="-1" class="wrap page">' + crumbs([[t('favourites')]]) +
-    '<div class="cat-head"><div class="cat-title"><span class="cat-ico" style="color:var(--caramel)">' + ico('heart', 44, 1.2) + '</span><div><h1>' + t('favT') + '</h1><p class="count">' + plural(list.length) + ' · ' + t('favNote') + '</p></div></div>' +
+    '<div class="cat-head"><div class="cat-title"><span class="cat-ico fx" style="color:var(--caramel)">' + ico('heart', 44, 1.2) + '</span><div><h1>' + t('favT') + '</h1><p class="count">' + plural(list.length) + ' · ' + t('favNote') + '</p></div></div>' +
     (list.length ? '<button class="btn" data-act="ask-favs">' + ico('message', 20, 1.5) + t('askAllFav') + '</button>' : '') + '</div>' + tabs +
     (shown.length ? grid(shown) : '<div class="empty"><span style="color:var(--caramel)">' + ico('heart', 40, 1.2) + '</span><h2 class="serif" style="margin:0;font-size:30px">' + t('favEmpty') + '</h2><p class="muted">' + t('favEmptyP') + '</p><a class="btn" href="#/c/all">' + t('browse') + '</a></div>') + '</main>';
 }
@@ -334,7 +342,7 @@ function sheetMessage() {
   if (sh.ids.length === 1) return T[lang].msgOne(itemLabel(byId(sh.ids[0])));
   return t('msgMany') + '\n\n' + sh.ids.map(function (id) { return '- ' + itemLabel(byId(id)); }).join('\n');
 }
-function sheetHtml() {
+function sheetHtml(still) {
   if (!S.sheet) return '';
   var m = sheetMessage(), c = CONFIG, opts = '';
   if (c.instagram) opts += '<a class="opt dark" href="' + igUrl() + '" target="_blank" rel="noopener" data-act="copy-keep">' + ico('message', 22, 1.4) + t('viaIg') + '</a>';
@@ -342,7 +350,7 @@ function sheetHtml() {
   if (c.email) opts += '<a class="opt" href="mailto:' + esc(c.email) + '?subject=' + encodeURIComponent('MtlMaison') + '&body=' + encodeURIComponent(m) + '">' + ico('mail', 22, 1.4) + t('viaMail') + '</a>';
   opts += '<button class="opt" data-act="copy-msg" style="background:transparent;text-align:left">' + ico(S.copied ? 'check' : 'message', 22, 1.4) + (S.copied ? t('copied') : t('copyMsg')) + '</button>';
   var title = S.sheet.ids.length === 1 ? t('contactT') + ' ' + esc(byId(S.sheet.ids[0]).name) : S.sheet.ids.length ? t('askAllFav') : t('tellUs');
-  return '<div class="overlay" data-act="sheet-bg"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-t"><div class="sheet-head"><h2 id="sheet-t">' + title + '</h2><button class="icon-btn" data-act="sheet-close" aria-label="' + t('close') + '" id="sheet-x">' + ico('close', 24) + '</button></div>' +
+  return '<div class="overlay' + (still ? ' still' : '') + '" data-act="sheet-bg"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-t"><div class="sheet-head"><h2 id="sheet-t">' + title + '</h2><button class="icon-btn" data-act="sheet-close" aria-label="' + t('close') + '" id="sheet-x">' + ico('close', 24) + '</button></div>' +
     '<p class="muted" style="margin:0">' + t('contactP') + '</p><p class="msg" style="white-space:pre-wrap">' + esc(m) + '</p>' + opts + (c.instagram ? '<p class="note" style="font-size:13px">' + t('igHelp') + '</p>' : '') + '</div></div>';
 }
 function copyText(txt, done) {
@@ -352,6 +360,8 @@ function copyText(txt, done) {
 
 /* ---------- render ---------- */
 var appEl = document.getElementById('app');
+var IO = null;
+var REVEAL = '.card,.tile,.step,.why,.looking,.empty,.visit-in>*,h2.title,.cat-head,.hero-text>*,.hero-art,.crumbs,.gallery,.info>*,.prose>*,.row-head,.book form,.sizes,.related';
 function titleFor(r) {
   var base = 'MtlMaison';
   if (r.n === 'item' && byId(r.id)) return byId(r.id).brand + ' ' + byId(r.id).name + ' · ' + base;
@@ -362,17 +372,48 @@ function titleFor(r) {
   if (r.n === 'privacy') return t('privT') + ' · ' + base;
   return base + ' · ' + t('heroT').replace(/\.$/, '') + ' · Montréal';
 }
+function decorate(keep) {
+  if (IO) { IO.disconnect(); IO = null; }
+  var els = appEl.querySelectorAll(REVEAL);
+  if (!keep && 'IntersectionObserver' in window) {
+    IO = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); IO.unobserve(e.target); } }); }, { threshold: 0.1, rootMargin: '0px 0px -5% 0px' });
+  }
+  for (var i = 0; i < els.length; i++) {
+    var el = els[i], idx = Array.prototype.indexOf.call(el.parentNode.children, el);
+    el.style.setProperty('--d', Math.min(idx, 7) * 70 + 'ms');
+    el.classList.add('rv');
+    if (IO) IO.observe(el); else el.classList.add('in');
+  }
+}
+function onScroll() {
+  var h = document.querySelector('header.site'); if (h) h.classList.toggle('scrolled', window.scrollY > 10);
+  var f = document.querySelector('.fab'); if (f) f.classList.toggle('show', window.scrollY > 500);
+}
 function render(keepScroll) {
   var r = route(), y = window.scrollY;
+  var animMenu = S.menuAnim, animSheet = S.sheetAnim; S.menuAnim = false; S.sheetAnim = false;
   var body = { home: pageHome, cat: pageCat, item: pageItem, favourites: pageFavs, search: pageSearch, book: pageBook, privacy: pagePrivacy }[r.n];
-  appEl.innerHTML = header(r) + (body ? body(r) : page404()) + footer() + mobileMenu() + sheetHtml();
+  appEl.innerHTML = header(r) + (body ? body(r) : page404()) + footer() + mobileMenu(!animMenu) + sheetHtml(!animSheet) +
+    ((S.menu || S.sheet) ? '' : '<button class="fab" data-act="ask-general" aria-label="' + t('contactUs') + '">' + ico('message', 26, 1.5) + '</button>');
   document.documentElement.lang = lang;
   document.title = titleFor(r);
   document.body.style.overflow = (S.menu || S.sheet) ? 'hidden' : '';
+  var main = document.getElementById('main'); if (main && !keepScroll) main.classList.add('enter');
+  decorate(keepScroll);
+  if (S.popId) { var hs = appEl.querySelectorAll('[data-act="fav"][data-id="' + S.popId + '"]'); for (var i = 0; i < hs.length; i++) hs[i].classList.add('beat'); S.popId = null; }
+  if (S.bump) { var bs = appEl.querySelectorAll('.badge'); for (var k = 0; k < bs.length; k++) bs[k].classList.add('bump'); S.bump = false; }
   if (keepScroll) window.scrollTo(0, y);
-  if (S.sheet && !keepScroll) { var x = document.getElementById('sheet-x'); if (x) x.focus(); }
+  if (animSheet) { var x = document.getElementById('sheet-x'); if (x) x.focus(); }
+  onScroll();
 }
 function go() { S.mega = false; S.menu = false; S.photo = 0; S.size = ''; if (route().n !== 'book') S.booked = null; render(false); window.scrollTo(0, 0); }
+function closeMenu() {
+  var m = document.querySelector('.menu');
+  if (!m) { S.menu = false; render(true); return; }
+  m.classList.remove('still'); m.classList.add('closing');
+  setTimeout(function () { S.menu = false; render(true); }, 300);
+}
+function openSheet(ids) { S.sheet = { ids: ids }; S.copied = false; S.sheetAnim = true; render(true); }
 
 /* ---------- events ---------- */
 function validate() {
@@ -390,25 +431,42 @@ function bookingText() {
     (fr ? 'Date souhaitée : ' : 'Preferred date: ') + f.date + '\n' + (fr ? 'Heure souhaitée : ' : 'Preferred time: ') + f.time + '\n' + (f.note.trim() ? '\n' + f.note.trim() + '\n' : '') +
     (favs.length ? '\n' + (fr ? 'Pièces qui m’intéressent :' : 'Pieces I am interested in:') + '\n' + favs.map(byId).filter(Boolean).map(function (i) { return '- ' + itemLabel(i); }).join('\n') + '\n' : '');
 }
+function ripple(ev) {
+  var rp = ev.target.closest && ev.target.closest('.btn,.btn-o,.btn-l,.btn-ol,.opt,.chip,.ask,.subchip');
+  if (!rp) return;
+  var b = rp.getBoundingClientRect(), s = document.createElement('span'), d = Math.max(b.width, b.height) * 2;
+  s.className = 'rip';
+  s.style.cssText = 'width:' + d + 'px;height:' + d + 'px;left:' + (ev.clientX - b.left - d / 2) + 'px;top:' + (ev.clientY - b.top - d / 2) + 'px';
+  rp.appendChild(s);
+  setTimeout(function () { if (s.parentNode) s.parentNode.removeChild(s); }, 650);
+}
+function playFx(ev) {
+  var fx = ev.target.closest && ev.target.closest('.fx,.catnav a');
+  if (!fx) return;
+  fx.classList.remove('pop'); void fx.offsetWidth; fx.classList.add('pop');
+  setTimeout(function () { fx.classList.remove('pop'); }, 900);
+}
 document.addEventListener('click', function (ev) {
   var sk = ev.target.closest && ev.target.closest('a.skip');
   if (sk) { ev.preventDefault(); var m = document.getElementById('main'); if (m) m.focus(); return; }
+  ripple(ev); playFx(ev);
   var el = ev.target.closest && ev.target.closest('[data-act]');
   if (!el || el.tagName === 'SELECT' || el.tagName === 'INPUT' || el.tagName === 'FORM') return;
   var a = el.getAttribute('data-act'), id = el.getAttribute('data-id');
   if (a === 'sheet-bg') { if (ev.target !== el) return; S.sheet = null; S.copied = false; render(true); return; }
   if (a === 'copy-keep') return;
-  ev.preventDefault && a !== 'copy-keep' && el.tagName !== 'A' && ev.preventDefault();
-  if (a === 'fav') { toggleFav(id); render(true); }
-  else if (a === 'ask') { S.sheet = { ids: [id] }; S.copied = false; render(false); }
-  else if (a === 'ask-favs') { S.sheet = { ids: favs.filter(byId) }; S.copied = false; render(false); }
-  else if (a === 'ask-general') { S.sheet = { ids: [] }; S.copied = false; render(false); }
+  if (el.tagName !== 'A') ev.preventDefault();
+  if (a === 'fav') { toggleFav(id); S.popId = id; S.bump = true; render(true); }
+  else if (a === 'ask') openSheet([id]);
+  else if (a === 'ask-favs') openSheet(favs.filter(byId));
+  else if (a === 'ask-general') openSheet([]);
   else if (a === 'sheet-close') { S.sheet = null; S.copied = false; render(true); }
   else if (a === 'copy-msg') { copyText(sheetMessage(), function () { S.copied = true; render(true); }); }
   else if (a === 'copy-booking') { copyText(S.booked.body, function () { S.copied = true; render(true); }); }
   else if (a === 'lang') { lang = lang === 'fr' ? 'en' : 'fr'; store('mm_lang', lang); render(true); }
-  else if (a === 'menu') { S.menu = true; render(true); }
-  else if (a === 'menu-close') { S.menu = false; render(true); }
+  else if (a === 'menu') { el.classList.add('x'); setTimeout(function () { S.menu = true; S.menuAnim = true; render(true); }, 230); }
+  else if (a === 'menu-close') closeMenu();
+  else if (a === 'menu-acc') { var w = el.closest('.menu-acc'); S.menuAcc = !w.classList.contains('open'); w.classList.toggle('open', S.menuAcc); el.setAttribute('aria-expanded', S.menuAcc); }
   else if (a === 'mega') { S.mega = !S.mega; render(true); }
   else if (a === 'size') { S.size = el.getAttribute('data-size'); render(true); }
   else if (a === 'favcat') { S.favCat = el.getAttribute('data-c'); render(true); }
@@ -432,8 +490,15 @@ document.addEventListener('submit', function (ev) {
   if (CONFIG.email) location.href = 'mailto:' + CONFIG.email + '?subject=' + encodeURIComponent(lang === 'fr' ? 'Demande de visite · MtlMaison' : 'Visit request · MtlMaison') + '&body=' + encodeURIComponent(body);
 });
 document.addEventListener('keydown', function (ev) {
-  if (ev.key === 'Escape') { if (S.sheet) { S.sheet = null; S.copied = false; render(true); } else if (S.menu) { S.menu = false; render(true); } else if (S.mega) { S.mega = false; render(true); } }
+  if (ev.key === 'Escape') { if (S.sheet) { S.sheet = null; S.copied = false; render(true); } else if (S.menu) closeMenu(); else if (S.mega) { S.mega = false; render(true); } }
 });
+document.addEventListener('mousemove', function (ev) {
+  var tm = document.querySelector('.tagmark'); if (!tm) return;
+  var a = ev.target.closest && ev.target.closest('.hero-art');
+  if (a) { var b = a.getBoundingClientRect(), x = (ev.clientX - b.left) / b.width - 0.5, yy = (ev.clientY - b.top) / b.height - 0.5; tm.style.transform = 'perspective(700px) rotateY(' + (x * 20) + 'deg) rotateX(' + (-yy * 20) + 'deg)'; }
+  else tm.style.transform = '';
+});
+window.addEventListener('scroll', onScroll, { passive: true });
 window.addEventListener('hashchange', go);
 window.addEventListener('storage', function () { try { favs = JSON.parse(store('mm_favs') || '[]'); } catch (e) {} render(true); });
 render(false);

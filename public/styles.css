@@ -205,3 +205,178 @@ footer.site{background:var(--espresso);color:var(--linen);padding:48px 0 28px}
   .ask{font-size:10px;letter-spacing:.08em}
   .sizes .count{margin-left:0;width:100%}
 }
+
+/* ===== motion + interaction ===== */
+@keyframes rise{from{opacity:0;transform:translateY(14px)}}
+@keyframes fade{from{opacity:0}}
+@keyframes pageIn{from{opacity:0;transform:translateY(12px)}}
+@keyframes sheetIn{from{opacity:0;transform:translateY(40px) scale(.97)}}
+@keyframes mmL{from{transform:translateX(-30px);opacity:0}}
+@keyframes mmR{from{transform:translateX(30px);opacity:0}}
+@keyframes mmSpin{from{transform:rotate(-180deg) scale(.3);opacity:0}}
+@keyframes sway{0%,100%{transform:rotate(-2deg)}50%{transform:rotate(2deg)}}
+@keyframes draw{to{stroke-dashoffset:0}}
+@keyframes rip{to{transform:scale(1);opacity:0}}
+@keyframes beat{0%{transform:scale(1)}30%{transform:scale(1.55)}55%{transform:scale(.85)}100%{transform:scale(1)}}
+@keyframes burst{to{box-shadow:0 0 0 18px rgba(163,100,58,0)}}
+@keyframes bump{40%{transform:scale(1.6)}}
+@keyframes megaIn{from{opacity:0;transform:translateY(-10px)}}
+@keyframes menuOpen{from{clip-path:circle(0 at 30px 34px)}to{clip-path:circle(160% at 30px 34px)}}
+@keyframes menuClose{from{clip-path:circle(160% at 30px 34px)}to{clip-path:circle(0 at 30px 34px)}}
+@keyframes fabPulse{0%,100%{box-shadow:0 10px 24px -8px rgba(42,30,23,.6),0 0 0 0 rgba(163,100,58,.5)}60%{box-shadow:0 10px 24px -8px rgba(42,30,23,.6),0 0 0 16px rgba(163,100,58,0)}}
+
+/* scroll reveal + page */
+.rv{opacity:0;transform:translateY(26px);transition:opacity .8s cubic-bezier(.2,.7,.2,1) var(--d,0ms),transform .8s cubic-bezier(.2,.7,.2,1) var(--d,0ms)}
+.rv.in{opacity:1;transform:none}
+main.enter{animation:pageIn .5s ease backwards}
+
+/* header */
+.logo-img{height:40px;width:auto;mix-blend-mode:multiply;transition:transform .4s cubic-bezier(.2,.8,.2,1)}
+.logo:hover .logo-img{transform:scale(1.05) rotate(-1.5deg)}
+.hdr-m .logo-img{height:36px}
+@media(min-width:761px){header.site{position:sticky;top:0;z-index:30;transition:box-shadow .3s}header.site.scrolled{box-shadow:0 8px 22px -14px rgba(42,30,23,.55)}}
+.catnav a,.catnav button{position:relative;border-bottom:0!important}
+.catnav a::after,.catnav button::after{content:'';position:absolute;left:0;right:0;bottom:0;height:2px;background:var(--caramel);transform:scaleX(0);transition:transform .35s cubic-bezier(.2,.7,.2,1)}
+.catnav a:hover::after,.catnav button:hover::after,.catnav [aria-current="page"]::after,.catnav [aria-expanded="true"]::after{transform:scaleX(1)}
+.catnav .ico{transition:transform .3s}.catnav [aria-expanded="true"] .ico{transform:rotate(180deg)}
+.mega{animation:megaIn .35s ease backwards}
+.mega a{animation:rise .45s backwards;animation-delay:calc(var(--i,0)*55ms + 60ms);transition:transform .3s,color .3s}
+.mega a:hover{transform:translateY(-4px);color:var(--caramel)}
+.icon-btn{transition:transform .25s}.icon-btn:hover{transform:scale(1.1)}.icon-btn:active{transform:scale(.9)}
+.badge.bump{animation:bump .5s}
+
+/* hamburger */
+.burger .bl{position:absolute;left:11px;right:11px;height:2px;background:currentColor;border-radius:2px;transition:transform .3s cubic-bezier(.2,.8,.2,1),opacity .2s,top .3s}
+.burger .bl:nth-child(1){top:14px}.burger .bl:nth-child(2){top:21px}.burger .bl:nth-child(3){top:28px}
+.burger.x .bl:nth-child(1){top:21px;transform:rotate(45deg)}
+.burger.x .bl:nth-child(2){opacity:0;transform:scaleX(0)}
+.burger.x .bl:nth-child(3){top:21px;transform:rotate(-45deg)}
+
+/* mobile menu */
+.menu{animation:menuOpen .55s cubic-bezier(.7,0,.2,1) both}
+.menu.closing{animation:menuClose .3s ease-in both}
+.menu.still,.menu.still *{animation:none!important}
+.menu-mm{animation:mmSpin .8s .15s cubic-bezier(.2,.8,.2,1) backwards}
+.menu-mm span:first-child{animation:mmL .7s .3s cubic-bezier(.2,.8,.2,1) backwards}
+.menu-mm span:last-child{animation:mmR .7s .3s cubic-bezier(.2,.8,.2,1) backwards}
+.menu-list>*{animation:rise .5s cubic-bezier(.2,.7,.2,1) backwards;animation-delay:calc(var(--i)*50ms + 220ms)}
+.menu-list a,.acc-btn{transition:transform .25s,background .25s,color .25s}
+.menu-list a:active,.acc-btn:active{background:var(--sand);transform:translateX(6px);color:var(--choc)}
+@media (hover:hover){.menu-list a:hover,.acc-btn:hover{background:var(--sand);transform:translateX(6px);color:var(--choc)}}
+.acc-btn{display:flex;align-items:center;gap:14px;width:100%;min-height:52px;border:0;border-bottom:1px solid rgba(163,100,58,.2);background:transparent;color:var(--espresso);font-family:var(--serif);font-size:24px;text-align:left;padding:0}
+.acc-btn .chev{margin-left:auto;margin-right:8px;transition:transform .4s cubic-bezier(.2,.8,.2,1)}
+.menu-acc.open .chev{transform:rotate(180deg)}
+.acc-sub{display:grid;grid-template-rows:0fr;transition:grid-template-rows .45s cubic-bezier(.2,.8,.2,1)}
+.menu-acc.open .acc-sub{grid-template-rows:1fr}
+.acc-in{min-height:0;overflow:hidden;visibility:hidden;transition:visibility 0s .45s}
+.menu-acc.open .acc-in{visibility:visible;transition-delay:0s}
+.menu-list .acc-in a{font-size:19px;min-height:48px;padding-left:20px;opacity:0;transform:translateX(-18px);transition:opacity .35s,transform .35s,background .25s,color .25s;animation:none}
+.menu-acc.open .acc-in a{opacity:1;transform:none;transition-delay:calc(var(--j)*55ms + 120ms),calc(var(--j)*55ms + 120ms),0s,0s}
+.menu-acc.open .acc-in a:hover,.menu-acc.open .acc-in a:active{transform:translateX(6px);transition-delay:0s}
+
+/* icon motion: one personality per category */
+.ic{transform-origin:50% 50%}
+.fx:is(:hover,:active,.pop) .ico{color:var(--caramel)}
+.tile.fx:is(:hover,:active,.pop) .ico{color:var(--linen)}
+.ic-tops{transform-origin:50% 8%}
+.fx:is(:hover,:active,.pop) .ic-tops{animation:k-tops .85s ease-in-out}
+@keyframes k-tops{0%,100%{transform:rotate(0)}20%{transform:rotate(-14deg) translateY(-3px)}45%{transform:rotate(11deg)}70%{transform:rotate(-5deg)}}
+.ic-bottoms{transform-origin:50% 8%}
+.fx:is(:hover,:active,.pop) .ic-bottoms{animation:k-bottoms .85s ease-in-out}
+@keyframes k-bottoms{0%,100%{transform:rotate(0) scaleY(1)}25%{transform:rotate(9deg) scaleY(1.06)}55%{transform:rotate(-8deg) scaleY(.96)}80%{transform:rotate(3deg)}}
+.fx:is(:hover,:active,.pop) .ic-jackets{animation:k-jackets .8s cubic-bezier(.3,1.6,.5,1)}
+@keyframes k-jackets{0%{transform:scale(1)}30%{transform:scale(1.18,.88)}60%{transform:scale(.94,1.12)}100%{transform:scale(1)}}
+.ic-purses{transform-origin:50% 25%}
+.fx:is(:hover,:active,.pop) .ic-purses{animation:k-purses .9s ease-in-out}
+@keyframes k-purses{0%,100%{transform:translateY(0) rotate(0)}25%{transform:translateY(-6px) rotate(-9deg)}55%{transform:translateY(-2px) rotate(7deg)}80%{transform:rotate(-3deg)}}
+.ic-shoes{transform-origin:12% 92%}
+.fx:is(:hover,:active,.pop) .ic-shoes{animation:k-shoes .9s ease-in-out}
+@keyframes k-shoes{0%,100%{transform:rotate(0)}22%{transform:rotate(-16deg)}44%{transform:rotate(0)}66%{transform:rotate(-10deg)}}
+.ic-accessories .mini{transform-box:fill-box;transform-origin:center}
+.fx:is(:hover,:active,.pop) .ic-accessories .mini{animation:k-mini .6s cubic-bezier(.3,1.6,.5,1)}
+.fx:is(:hover,:active,.pop) .ic-accessories g:nth-of-type(2) .mini{animation-delay:.08s}
+.fx:is(:hover,:active,.pop) .ic-accessories g:nth-of-type(3) .mini{animation-delay:.16s}
+.fx:is(:hover,:active,.pop) .ic-accessories g:nth-of-type(4) .mini{animation-delay:.24s}
+@keyframes k-mini{0%,100%{transform:scale(1)}45%{transform:scale(1.4) rotate(8deg)}}
+.ic-watches path:last-child{transform-box:view-box;transform-origin:12px 12px}
+.fx:is(:hover,:active,.pop) .ic-watches path:last-child{animation:k-hand 1s cubic-bezier(.5,0,.3,1)}
+@keyframes k-hand{to{transform:rotate(360deg)}}
+.fx:is(:hover,:active,.pop) .ic-watches{animation:k-tick .5s .5s ease-out}
+@keyframes k-tick{40%{transform:scale(1.15)}}
+.fx:is(:hover,:active,.pop) .ic-belts rect:nth-of-type(2){animation:k-belt .8s ease-in-out}
+@keyframes k-belt{0%,100%{transform:translateX(0)}30%{transform:translateX(-5px)}65%{transform:translateX(4px)}}
+.fx:is(:hover,:active,.pop) .ic-jewelry{animation:k-jewel .9s ease-in-out}
+@keyframes k-jewel{0%,100%{transform:rotate(0) scale(1)}25%{transform:rotate(-12deg) scale(1.2)}55%{transform:rotate(10deg) scale(1.12)}80%{transform:rotate(-3deg) scale(1.04)}}
+.ic-wallets path:nth-child(2){transform-box:view-box;transform-origin:3.5px 7.5px}
+.fx:is(:hover,:active,.pop) .ic-wallets path:nth-child(2){animation:k-flap .8s ease-in-out}
+@keyframes k-flap{0%,100%{transform:rotate(0)}40%{transform:rotate(-14deg)}}
+.fx:is(:hover,:active,.pop) .ic-wallets path:nth-child(3){animation:k-clasp .8s ease-in-out}
+@keyframes k-clasp{40%{transform:translateX(2px)}}
+.fx:is(:hover,:active,.pop) .ic-sunglasses{animation:k-sun .8s cubic-bezier(.3,1.4,.5,1)}
+@keyframes k-sun{0%{transform:translateY(0)}30%{transform:translateY(-7px) rotate(-8deg)}60%{transform:translateY(2px) rotate(3deg)}100%{transform:translateY(0)}}
+.ic-new{transform-origin:50% 12%}
+.fx:is(:hover,:active,.pop) .ic-new{animation:k-tag .9s ease-in-out}
+@keyframes k-tag{0%,100%{transform:rotate(0)}20%{transform:rotate(-20deg)}45%{transform:rotate(16deg)}70%{transform:rotate(-7deg)}}
+.ic-all rect{transform-box:fill-box;transform-origin:center}
+.fx:is(:hover,:active,.pop) .ic-all rect{animation:k-grid .6s cubic-bezier(.3,1.6,.5,1)}
+.fx:is(:hover,:active,.pop) .ic-all rect:nth-of-type(2){animation-delay:.07s}
+.fx:is(:hover,:active,.pop) .ic-all rect:nth-of-type(3){animation-delay:.14s}
+.fx:is(:hover,:active,.pop) .ic-all rect:nth-of-type(4){animation-delay:.21s}
+@keyframes k-grid{0%,100%{transform:scale(1)}45%{transform:scale(.6)}}
+.fx:is(:hover,:active,.pop) .ic-heart,.beat .ic-heart{animation:beat .6s cubic-bezier(.2,.8,.2,1)}
+.fx:is(:hover,:active,.pop) .ic-calendar{animation:k-cal .7s ease-in-out}
+@keyframes k-cal{30%{transform:translateY(-3px) rotate(-6deg)}60%{transform:rotate(5deg)}}
+.heart.beat::after{content:'';position:absolute;inset:0;border-radius:50%;box-shadow:0 0 0 0 rgba(163,100,58,.6);animation:burst .6s ease-out}
+.icon-btn:hover .ic-search{transform:rotate(-18deg) scale(1.1)}.ic-search,.ic-close,.ic-message{transition:transform .3s}
+.icon-btn:hover .ic-close{transform:rotate(90deg)}
+.btn:hover .ic-message,.fab:hover .ic-message{transform:translateY(-2px) rotate(-8deg)}
+
+/* tiles + cards + chips */
+.tile .sq{transition:background .35s,transform .35s cubic-bezier(.2,.8,.2,1),box-shadow .35s,color .35s}
+.tile:hover .sq,.tile:focus-visible .sq,.tile.pop .sq{background:var(--caramel);transform:translateY(-6px);box-shadow:0 16px 28px -14px rgba(42,30,23,.5);color:var(--linen)!important}
+.tile .nm{transition:letter-spacing .35s}.tile:hover .nm{letter-spacing:.05em}
+.subchip,.cat-ico{transition:transform .25s,background .3s,border-color .3s,box-shadow .3s}
+.subchip:hover{transform:translateY(-3px);background:var(--sand)}.subchip:active{transform:scale(.95)}
+.cat-ico:hover{background:var(--caramel);color:var(--linen)!important;transform:rotate(-4deg) scale(1.06)}
+.chip:not(.on):not([aria-pressed="true"]):hover{background:var(--sand)}
+.card .ph{transition:box-shadow .4s}
+.card:hover .ph{box-shadow:0 20px 30px -20px rgba(42,30,23,.5)}
+.card .ph img{transition:transform .8s cubic-bezier(.2,.7,.2,1)}.card:hover .ph img{transform:scale(1.07)}
+.card .ph>span:not(.new){transition:transform .5s cubic-bezier(.2,.8,.2,1)}.card:hover .ph>span:not(.new){transform:scale(1.14) rotate(-4deg)}
+.card .pname{transition:color .3s}.card:hover .pname{color:var(--caramel)}
+.card .ask{transition:background .3s,color .3s}.card:hover .ask{background:var(--espresso);color:var(--linen)}
+.heart{transition:transform .25s,background .25s}.heart:hover{transform:scale(1.14)}.heart:active{transform:scale(.88)}
+.gallery .ph img{transition:transform .7s cubic-bezier(.2,.7,.2,1)}.gallery .ph:hover img{transform:scale(1.05)}
+.gallery .ph>span:not(.new){transition:transform .6s}.gallery .ph:hover>span:not(.new){transform:scale(1.08) rotate(-3deg)}
+
+/* buttons */
+.btn,.btn-o,.btn-l,.btn-ol,.opt,.chip,.ask,.subchip{position:relative;overflow:hidden;transition:transform .2s,background .3s,color .3s,box-shadow .3s,border-color .3s}
+.btn:hover,.btn-l:hover{transform:translateY(-2px);box-shadow:0 12px 22px -12px rgba(42,30,23,.55)}
+.btn-o:hover{background:var(--espresso);color:var(--linen)}
+.btn-ol:hover{background:var(--linen);color:var(--espresso)}
+.btn:active,.btn-o:active,.btn-l:active,.btn-ol:active,.ask:active,.chip:active,.opt:active{transform:scale(.97)}
+.opt:hover{transform:translateX(5px)}
+.rip{position:absolute;border-radius:50%;background:currentColor;opacity:.28;transform:scale(0);animation:rip .6s ease-out forwards;pointer-events:none}
+.field input{transition:box-shadow .3s,border-color .3s}.field input:focus{outline:none;box-shadow:0 0 0 3px rgba(163,100,58,.35);border-color:var(--caramel)}
+.btn-link{transition:letter-spacing .3s}.btn-link:hover{letter-spacing:.2em}
+
+/* hero */
+.hero-art{overflow:hidden}
+.tagmark{transition:transform .25s ease-out}
+.tagsway{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;transform-origin:50% 8%;animation:sway 6s ease-in-out infinite}
+.tagmark svg path,.tagmark svg circle{stroke-dasharray:1400;stroke-dashoffset:1400;animation:draw 2.2s .2s ease forwards}
+.tagmark .mono span:first-child{animation:mmL 1s .5s cubic-bezier(.2,.8,.2,1) backwards}
+.tagmark .mono span:last-child{animation:mmR 1s .5s cubic-bezier(.2,.8,.2,1) backwards}
+
+/* overlays + fab */
+.overlay{animation:fade .3s both}
+.sheet{animation:sheetIn .45s cubic-bezier(.2,.8,.2,1) both}
+.overlay.still,.overlay.still .sheet{animation:none}
+.fab{position:fixed;right:18px;bottom:18px;width:56px;height:56px;border-radius:50%;border:0;padding:0;background:var(--espresso);color:var(--linen);display:flex;align-items:center;justify-content:center;z-index:35;opacity:0;transform:translateY(20px) scale(.8);pointer-events:none;transition:opacity .35s,transform .35s}
+.fab.show{opacity:1;transform:none;pointer-events:auto;animation:fabPulse 3s 1s infinite}
+.fab.show:hover{transform:scale(1.1)}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;animation-delay:0s!important;transition-duration:.01ms!important;transition-delay:0s!important}
+  .rv{opacity:1;transform:none}
+}
