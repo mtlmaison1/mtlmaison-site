@@ -406,7 +406,11 @@ function pageHome() {
   var news = ITEMS.filter(function (i) { return i.isNew; }).slice(0, 8);
   if (!news.length) news = ITEMS.slice(0, 8);
   var tiles = CATS.map(function (c) { return '<a class="tile fx" href="#/c/' + c + '"><span class="sq" style="color:var(--caramel)">' + ico(c, 72, 1) + '</span><span class="nm">' + t(c) + '</span><span class="ds">' + t(c + '_d') + '</span></a>'; }).join('');
-  var tag = '<span class="tagmark"><span class="tagsway"><svg viewBox="0 0 300 300" fill="none" stroke="#A3643A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M150 18 C163 18 172 27 172 40 C172 46 169 51 165 54 L262 150 C268 156 268 164 262 170 L170 262 C164 268 156 268 150 262 L38 150 C32 144 32 136 38 130 L135 54 C131 51 128 46 128 40 C128 27 137 18 150 18 Z" transform="rotate(0 150 150)" opacity=".0"/><path d="M96 38 H204 A22 22 0 0 1 226 60 V264 A22 22 0 0 1 204 286 H96 A22 22 0 0 1 74 264 V60 A22 22 0 0 1 96 38 Z"/><circle cx="150" cy="62" r="8"/><path d="M150 54 C150 30 132 14 112 10"/></svg><span class="mono"><span>M</span><span>M</span></span></span></span>';
+  var tag = '<span class="tagmark"><span class="tagsway"><svg viewBox="0 0 300 300" overflow="visible" aria-hidden="true"><defs><filter id="rrHero" x="-10%" y="-10%" width="120%" height="120%"><feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed="7"/><feDisplacementMap in="SourceGraphic" scale="5"/></filter></defs>' +
+    '<g class="tg-body" filter="url(#rrHero)" fill="none" stroke-linecap="round" stroke-linejoin="round"><path pathLength="1" d="M 112 34 L 188 34 L 234 80 L 234 284 L 66 284 L 66 80 Z" stroke="#A3643A" stroke-width="6"/><circle pathLength="1" cx="150" cy="66" r="7" stroke="#A3643A" stroke-width="3"/></g>' +
+    '<g class="tg-thread"><path class="th" pathLength="1" d="M 150 59 C 138 40, 152 24, 162 32 C 170 38, 160 46, 168 42 C 178 36, 176 22, 190 22 C 200 22, 198 30, 207 27 C 212 25, 214 22, 218 21" fill="none" stroke="#A3643A" stroke-width="2" stroke-linecap="round"/>' +
+    '<g class="tg-needle"><g transform="translate(214 22) rotate(-15)"><path d="M0 -2.3 L30 -0.9 L41 0 L30 0.9 L0 2.3 Q-3.5 0 0 -2.3 Z" fill="#2A1E17"/><ellipse cx="4.6" cy="0" rx="2.5" ry="0.85" style="fill:var(--sand)"/></g><path class="tg-tail" d="M 219 21 C 223 23, 223 27, 220 30" fill="none" stroke="#A3643A" stroke-width="2" stroke-linecap="round"/></g></g></svg>' +
+    '<span class="mono" role="img" aria-label="MM"><span>M</span><span>M</span></span></span></span><img class="hero-name" src="assets/mtlmaison-name.png" alt="MtlMaison">';
   var sIc = ['bag', 'mail', 'new', 'check'];
   var steps = [0, 1, 2, 3].map(function (i) { return '<a class="step fx" href="#/how" style="text-decoration:none;color:inherit"><span style="color:var(--caramel)">' + ico(sIc[i], 34, 1.2) + '</span><p class="eyebrow">0' + (i + 1) + '</p><h3>' + t('sTitle')[i] + '</h3><p>' + t('sShort')[i] + '</p></a>'; }).join('');
   var why = [['w1t', 'w1p'], ['w2t', 'w2p'], ['w3t', 'w3p']].map(function (s) { return '<div class="why"><h3>' + t(s[0]) + '</h3><p>' + t(s[1]) + '</p></div>'; }).join('');
@@ -862,6 +866,11 @@ document.addEventListener('mousemove', function (ev) {
   var a = ev.target.closest && ev.target.closest('.hero-art');
   if (a) { var b = a.getBoundingClientRect(), x = (ev.clientX - b.left) / b.width - 0.5, yy = (ev.clientY - b.top) / b.height - 0.5; tm.style.transform = 'perspective(700px) rotateY(' + (x * 20) + 'deg) rotateX(' + (-yy * 20) + 'deg)'; }
   else tm.style.transform = '';
+});
+document.addEventListener('click', function (ev) {
+  var art = ev.target.closest && ev.target.closest('.hero-art'); if (!art) return;
+  var sw = art.querySelector('.tagsway'); if (!sw || sw.classList.contains('flick')) return;
+  sw.classList.add('flick'); sw.addEventListener('animationend', function done(e) { if (e.target !== sw) return; sw.classList.remove('flick'); sw.removeEventListener('animationend', done); });
 });
 window.addEventListener('scroll', onScroll, { passive: true });
 window.addEventListener('hashchange', go);
